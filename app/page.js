@@ -13,6 +13,14 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [selectedFormat, setSelectedFormat] = useState('');
+
+  // Sinkronisasi tab dengan URL Hash agar bertahan saat di-refresh
+  useEffect(() => {
+    const hash = window.location.hash.replace('#', '');
+    if (['youtube', 'facebook', 'instagram', 'tiktok'].includes(hash)) {
+      setActiveTab(hash);
+    }
+  }, []);
   const [isDownloading, setIsDownloading] = useState(false);
 
   // Reset state when switching tabs
@@ -191,6 +199,7 @@ export default function Home() {
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
+    window.location.hash = tab; // Simpan ke URL hash
     setIsSidebarOpen(false); // Auto-close sidebar on mobile when tab clicked
   };
 
