@@ -1075,4 +1075,18 @@ body {
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
   }
+
+  /* Ensure Saweria button is always visible on mobile */
+  .sidebar {
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .dev-info {
+    margin-top: 1.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .dev-support-btn {
+    margin-bottom: 0.5rem;
+  }
 }
