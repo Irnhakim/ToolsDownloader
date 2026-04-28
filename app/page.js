@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Download, X, ChevronDown, Loader2, Video, Tv, Camera, Music, Wrench, Menu, QrCode, ImageUp, Copy, Check, Settings2, Maximize2, FileText, FileImage } from 'lucide-react';
+import { Download, X, ChevronDown, Loader2, Video, Tv, Camera, Music, Wrench, Menu, QrCode, ImageUp, Copy, Check, Settings2, Maximize2, FileText, FileImage, Link2, Clock, Shield, Upload } from 'lucide-react';
 import * as htmlToImage from 'html-to-image';
 
 export default function Home() {
@@ -45,11 +45,26 @@ export default function Home() {
   const [resizeFit, setResizeFit] = useState('fit');
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // Temp Link Generator States
+  const [tempFile, setTempFile] = useState(null);
+  const [tempExpiry, setTempExpiry] = useState('1x'); // '1x' or '24h'
+  const [tempLinkResult, setTempLinkResult] = useState(null);
+  const [tempLinkCopied, setTempLinkCopied] = useState(false);
+  const [isTempUploading, setIsTempUploading] = useState(false);
+
   // Restore sidebar group state from localStorage after mount (fix SSR hydration)
   useEffect(() => {
     setIsSocialGroupOpen(localStorage.getItem('sidebar_social') === 'true');
     setIsGeneratorGroupOpen(localStorage.getItem('sidebar_generators') === 'true');
     setIsImageGroupOpen(localStorage.getItem('sidebar_filetools') === 'true');
+  }, []);
+
+  // Sinkronisasi tab dengan URL Hash agar bertahan saat di-refresh
+  useEffect(() => {
+    const hash = window.location.hash.replace('#', '');
+    if (['youtube', 'facebook', 'instagram', 'tiktok', 'qrcode', 'compress', 'resize', 'img2pdf', 'pdf2img', 'templink'].includes(hash)) {
+      setActiveTab(hash);
+    }
   }, []);
 
   // Initialize pdfjs-dist dynamically
@@ -105,7 +120,7 @@ export default function Home() {
   // Sinkronisasi tab dengan URL Hash agar bertahan saat di-refresh
   useEffect(() => {
     const hash = window.location.hash.replace('#', '');
-    if (['youtube', 'facebook', 'instagram', 'tiktok', 'qrcode', 'compress', 'resize', 'img2pdf', 'pdf2img'].includes(hash)) {
+    if (['youtube', 'facebook', 'instagram', 'tiktok', 'qrcode', 'compress', 'resize', 'img2pdf', 'pdf2img', 'templink'].includes(hash)) {
       setActiveTab(hash);
     }
   }, []);
@@ -121,6 +136,9 @@ export default function Home() {
     setToolsFile(null);
     setToolsFiles([]);
     setIsProcessing(false);
+    setTempFile(null);
+    setTempLinkResult(null);
+    setTempLinkCopied(false);
   }, [activeTab]);
 
   // Debounce fetching info
@@ -134,7 +152,7 @@ export default function Home() {
       }
 
       // Jangan lakukan request ke backend jika berada di halaman non-downloader
-      if (['qrcode', 'compress', 'resize', 'img2pdf', 'pdf2img'].includes(activeTab)) {
+      if (['qrcode', 'compress', 'resize', 'img2pdf', 'pdf2img', 'templink', 'linkpreview'].includes(activeTab)) {
         return;
       }
 
@@ -379,6 +397,50 @@ export default function Home() {
     }
   };
 
+  // --- Temp Link Handler ---
+  const handleTempLinkUpload = async () => {
+    if (!tempFile) return alert('Please select a file first!');
+    setIsTempUploading(true);
+    setTempLinkResult(null);
+    try {
+      const formData = new FormData();
+      formData.append('file', tempFile);
+      formData.append('expiry', tempExpiry);
+
+      const res = await fetch('/api/templink/upload', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Upload failed');
+
+      const link = `${window.location.origin}/api/templink/${data.id}`;
+      setTempLinkResult({ link, filename: data.filename, expiry: tempExpiry });
+    } catch (err) {
+      alert('Error: ' + err.message);
+    } finally {
+      setIsTempUploading(false);
+    }
+  };
+
+  // --- OG Link Preview Handler ---
+  const handleOgPreview = async () => {
+    if (!url.trim()) return;
+    setIsOgLoading(true);
+    setOgPreview(null);
+    try {
+      const res = await fetch('/api/og', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: url.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to fetch preview');
+      setOgPreview(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsOgLoading(false);
+    }
+  };
+
   // --- QR Code Handlers ---
   const handleLogoUpload = (e) => {
     const file = e.target.files[0];
@@ -456,6 +518,12 @@ export default function Home() {
     if (activeTab === 'pdf2img') {
       return { title: 'PDF to Image', placeholder: '', icon: <FileImage size={32} /> };
     }
+    if (activeTab === 'templink') {
+      return { title: 'Temp Link Generator', placeholder: '', icon: <Link2 size={32} /> };
+    }
+    if (activeTab === 'linkpreview') {
+      return { title: 'Link Preview Generator', placeholder: 'Paste any URL to generate preview...', icon: <Eye size={32} /> };
+    }
     return {
       title: 'Facebook Downloader',
       placeholder: 'Paste Facebook Video Link here...',
@@ -507,6 +575,7 @@ export default function Home() {
           </div>
           <div className={`nav-group-content ${isGeneratorGroupOpen ? 'open' : ''}`}>
             <button className={`nav-item qrcode-btn ${activeTab === 'qrcode' ? 'active' : ''}`} onClick={() => handleTabChange('qrcode')}><QrCode size={20} /> QR Code Generator</button>
+            <button className={`nav-item templink-btn ${activeTab === 'templink' ? 'active' : ''}`} onClick={() => handleTabChange('templink')}><Link2 size={20} /> Temp Link Generator</button>
           </div>
         </div>
 
@@ -562,43 +631,45 @@ export default function Home() {
           </div>
 
           <div className="glass-card">
-            <div className="input-wrapper">
-              <input
-                type="text"
-                className="url-input"
-                placeholder={pageConfig.placeholder}
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    if (activeTab === 'qrcode') {
-                      if (!url.trim()) return;
-                      setQrText(url);
-                      setIsQrGenerated(true);
-                    } else {
-                      handleFetchInfo();
-                    }
-                  }
-                }}
-              />
-              {url && (
-                <button
-                  className="clear-btn"
-                  onClick={() => {
-                    setUrl('');
-                    if (activeTab === 'qrcode') {
-                      setQrText('');
-                      setIsQrGenerated(false);
-                    } else {
-                      setVideoInfo(null);
-                      setError('');
+            {!['compress', 'resize', 'img2pdf', 'pdf2img', 'templink'].includes(activeTab) && (
+              <div className="input-wrapper">
+                <input
+                  type="text"
+                  className="url-input"
+                  placeholder={pageConfig.placeholder}
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      if (activeTab === 'qrcode') {
+                        if (!url.trim()) return;
+                        setQrText(url);
+                        setIsQrGenerated(true);
+                      } else {
+                        handleFetchInfo();
+                      }
                     }
                   }}
-                >
-                  <X size={18} />
-                </button>
-              )}
-            </div>
+                />
+                {url && (
+                  <button
+                    className="clear-btn"
+                    onClick={() => {
+                      setUrl('');
+                      if (activeTab === 'qrcode') {
+                        setQrText('');
+                        setIsQrGenerated(false);
+                      } else {
+                        setVideoInfo(null);
+                        setError('');
+                      }
+                    }}
+                  >
+                    <X size={18} />
+                  </button>
+                )}
+              </div>
+            )}
 
             {error && (
               <div style={{ color: 'var(--danger)', fontSize: '0.9rem', padding: '0.5rem 1rem', background: '#fee2e2', borderRadius: '8px' }}>
@@ -722,8 +793,165 @@ export default function Home() {
                   </div>
                 )}
               </div>
-            ) : ['compress', 'resize', 'img2pdf', 'pdf2img'].includes(activeTab) ? (
+            ) : activeTab === 'linkpreview' ? (
+              <div>
+                {/* Generate button */}
+                <button
+                  className="download-btn"
+                  style={{ width: '100%', padding: '1rem', justifyContent: 'center', marginBottom: '1.5rem' }}
+                  onClick={handleOgPreview}
+                  disabled={!url.trim() || isOgLoading}
+                >
+                  {isOgLoading
+                    ? <><Loader2 className="spinner" size={20} /> Fetching Preview...</>
+                    : <><Eye size={20} /> Generate Preview</>
+                  }
+                </button>
+
+                {/* Preview Card */}
+                {ogPreview && (
+                  <div className="og-card">
+                    {ogPreview.image && (
+                      <div className="og-card-image">
+                        <img src={ogPreview.image} alt="OG Preview" onError={e => e.target.style.display = 'none'} />
+                      </div>
+                    )}
+                    <div className="og-card-body">
+                      <div className="og-card-site">
+                        <img src={ogPreview.favicon} alt="" width={16} height={16} style={{ borderRadius: '3px' }} onError={e => e.target.style.display = 'none'} />
+                        {ogPreview.siteName || ogPreview.hostname}
+                      </div>
+                      <div className="og-card-title">{ogPreview.title}</div>
+                      {ogPreview.description && (
+                        <div className="og-card-desc">{ogPreview.description}</div>
+                      )}
+                      <a href={ogPreview.url} target="_blank" rel="noopener noreferrer" className="og-card-link">
+                        <ExternalLink size={13} /> {ogPreview.hostname}
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {/* Raw data table */}
+                {ogPreview && (
+                  <div className="og-meta-table">
+                    <div className="og-meta-title"><Eye size={14} /> Open Graph Metadata</div>
+                    {[
+                      ['Title', ogPreview.title],
+                      ['Description', ogPreview.description],
+                      ['Image URL', ogPreview.image],
+                      ['Site Name', ogPreview.siteName],
+                      ['Canonical URL', ogPreview.url],
+                    ].filter(([, v]) => v).map(([label, value]) => (
+                      <div key={label} className="og-meta-row">
+                        <span className="og-meta-label">{label}</span>
+                        <span className="og-meta-value">{value}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : ['compress', 'resize', 'img2pdf', 'pdf2img', 'templink'].includes(activeTab) ? (
               <div className="tools-container">
+
+                {/* === TEMP LINK GENERATOR === */}
+                {activeTab === 'templink' && (
+                  <div className="tools-panel">
+                    {/* Info badges */}
+                    <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.3)', borderRadius: '20px', padding: '0.3rem 0.75rem', fontSize: '0.78rem', color: '#6366f1', fontWeight: 600 }}>
+                        <Shield size={13} /> Secure
+                      </span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.3)', borderRadius: '20px', padding: '0.3rem 0.75rem', fontSize: '0.78rem', color: '#6366f1', fontWeight: 600 }}>
+                        <Clock size={13} /> Auto-Expire
+                      </span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.3)', borderRadius: '20px', padding: '0.3rem 0.75rem', fontSize: '0.78rem', color: '#6366f1', fontWeight: 600 }}>
+                        <Upload size={13} /> Max 50MB
+                      </span>
+                    </div>
+
+                    {/* File upload */}
+                    <label className="file-upload-label" style={{ width: '100%', justifyContent: 'center', padding: '2rem', border: '2px dashed #cbd5e1', borderRadius: '12px', cursor: 'pointer', flexDirection: 'column', gap: '0.5rem' }}>
+                      <Link2 size={32} style={{ color: '#6366f1' }} />
+                      <span style={{ fontWeight: 700 }}>{tempFile ? tempFile.name : 'Click to select any file'}</span>
+                      <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Any file type · Max 50MB</span>
+                      <input type="file" style={{ display: 'none' }} onChange={e => { setTempFile(e.target.files[0]); setTempLinkResult(null); }} />
+                    </label>
+
+                    {tempFile && (
+                      <div className="qr-settings-panel" style={{ marginTop: '1rem' }}>
+                        <div className="setting-group" style={{ gridColumn: '1 / -1' }}>
+                          <span className="setting-label">Expiry Rule</span>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button
+                              onClick={() => setTempExpiry('1x')}
+                              className={`qr-action-btn ${tempExpiry === '1x' ? 'qr-download-btn' : 'qr-copy-btn'}`}
+                              style={{ flex: 1, justifyContent: 'center', flexDirection: 'column', gap: '0.2rem' }}
+                            >
+                              <span style={{ fontWeight: 700 }}>🔒 1 Download</span>
+                              <span style={{ fontSize: '0.7rem', opacity: 0.8 }}>Link self-destructs after 1 use</span>
+                            </button>
+                            <button
+                              onClick={() => setTempExpiry('24h')}
+                              className={`qr-action-btn ${tempExpiry === '24h' ? 'qr-download-btn' : 'qr-copy-btn'}`}
+                              style={{ flex: 1, justifyContent: 'center', flexDirection: 'column', gap: '0.2rem' }}
+                            >
+                              <span style={{ fontWeight: 700 }}>⏰ 24 Hours</span>
+                              <span style={{ fontSize: '0.7rem', opacity: 0.8 }}>Expires after 24 hours</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        <div style={{ gridColumn: '1 / -1' }}>
+                          <button
+                            className="download-btn"
+                            style={{ width: '100%', padding: '1rem', justifyContent: 'center' }}
+                            onClick={handleTempLinkUpload}
+                            disabled={isTempUploading}
+                          >
+                            {isTempUploading
+                              ? <><Loader2 className="spinner" size={20} /> Uploading...</>
+                              : <><Link2 size={20} /> Generate Temp Link</>
+                            }
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Result */}
+                    {tempLinkResult && (
+                      <div style={{ marginTop: '1rem', padding: '1.25rem', background: 'rgba(99,102,241,0.1)', border: '1.5px solid rgba(99,102,241,0.3)', borderRadius: '14px', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, color: '#4f46e5', fontSize: '0.9rem' }}>
+                          <Check size={18} />
+                          Link Generated! {tempLinkResult.expiry === '1x' ? '(Single-use)' : '(Expires in 24h)'}
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                          <input
+                            readOnly
+                            value={tempLinkResult.link}
+                            style={{ flex: 1, padding: '0.6rem 0.75rem', borderRadius: '8px', border: '1px solid #e2e8f0', fontFamily: 'monospace', fontSize: '0.8rem', color: '#334155', background: 'white', outline: 'none' }}
+                            onFocus={e => e.target.select()}
+                          />
+                          <button
+                            className="download-btn"
+                            style={{ padding: '0.6rem 1rem', flexShrink: 0 }}
+                            onClick={async () => {
+                              await navigator.clipboard.writeText(tempLinkResult.link);
+                              setTempLinkCopied(true);
+                              setTimeout(() => setTempLinkCopied(false), 2500);
+                            }}
+                          >
+                            {tempLinkCopied ? <><Check size={16} /> Copied!</> : <><Copy size={16} /> Copy</>}
+                          </button>
+                        </div>
+                        <div style={{ fontSize: '0.78rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                          <Shield size={12} />
+                          Share this link. It will {tempLinkResult.expiry === '1x' ? 'auto-delete after 1 download' : 'expire in 24 hours'}.
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* === COMPRESS IMAGE === */}
                 {activeTab === 'compress' && (

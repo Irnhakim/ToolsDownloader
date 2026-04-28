@@ -18,7 +18,9 @@
   --bg-img2pdf-dark: #b91c1c;
   --bg-pdf2img: #d97706;
   --bg-pdf2img-dark: #b45309;
-  
+  --bg-templink: #4f46e5;
+  --bg-templink-dark: #3730a3;
+
   --glass-bg: rgba(255, 255, 255, 0.9);
   --glass-border: rgba(255, 255, 255, 0.4);
   --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
@@ -119,6 +121,14 @@ body {
 
 .app-wrapper.pdf2img {
   background: radial-gradient(circle at 50% 0%, #fbbf24, var(--bg-pdf2img-dark));
+}
+
+.app-wrapper.templink {
+  background: radial-gradient(ellipse at 30% 0%, #818cf8, var(--bg-templink-dark));
+}
+
+.app-wrapper.linkpreview {
+  background: radial-gradient(ellipse at 60% 0%, #34d399, #0f766e);
 }
 
 /* Sidebar */
@@ -365,6 +375,7 @@ body {
 .nav-item.active.resize-btn { color: var(--bg-resize); }
 .nav-item.active.img2pdf-btn { color: var(--bg-img2pdf); }
 .nav-item.active.pdf2img-btn { color: var(--bg-pdf2img); }
+.nav-item.active.templink-btn { color: var(--bg-templink); }
 
 /* Main Content Area */
 .main-content {
@@ -657,6 +668,15 @@ body {
   background: var(--bg-pdf2img-dark);
   box-shadow: 0 6px 16px rgba(217, 119, 6, 0.4);
   color: white;
+}
+
+.app-wrapper.templink .download-btn {
+  background: var(--bg-templink);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+.app-wrapper.templink .download-btn:hover:not(:disabled) {
+  background: var(--bg-templink-dark);
+  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
 }
 
 .download-btn:active:not(:disabled) {
