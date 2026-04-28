@@ -573,13 +573,89 @@ body {
   border-radius: 16px;
   box-shadow: 0 4px 24px rgba(0,0,0,0.05);
   animation: fadeIn 0.4s ease;
+  width: 100%;
+}
+
+/* Custom Settings Panel */
+.qr-settings-panel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.4);
+  padding: 1rem;
+  border-radius: 12px;
+  width: 100%;
+}
+
+@media (max-width: 600px) {
+  .qr-settings-panel {
+    grid-template-columns: 1fr;
+  }
+}
+
+.setting-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.setting-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-main);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.setting-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.color-picker {
+  width: 40px;
+  height: 40px;
+  border: 2px solid white;
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* Custom Frame */
+.qr-frame-wrapper {
+  background: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  border-radius: 16px;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.qr-frame-wrapper.framed {
+  padding: 1.5rem 1.5rem 2rem 1.5rem;
+  border: 6px solid var(--bg-qrcode);
+  border-radius: 24px;
+}
+
+.qr-frame-text {
+  font-weight: 900;
+  font-size: 1.5rem;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.05em;
+  text-align: center;
 }
 
 .qr-canvas-wrapper {
-  padding: 1rem;
   background: white;
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .qr-actions {

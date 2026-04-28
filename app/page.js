@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Download, X, ChevronDown, Loader2, Video, Tv, Camera, Music, Wrench, Menu, QrCode, ImageUp, Copy, Check } from 'lucide-react';
-import { QRCodeCanvas } from 'qrcode.react';
+import { useState, useEffect, useRef } from 'react';
+import { Download, X, ChevronDown, Loader2, Video, Tv, Camera, Music, Wrench, Menu, QrCode, ImageUp, Copy, Check, Settings2 } from 'lucide-react';
+import * as htmlToImage from 'html-to-image';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('youtube');
@@ -21,6 +21,60 @@ export default function Home() {
   const [qrLogo, setQrLogo] = useState(null);
   const [isQrGenerated, setIsQrGenerated] = useState(false);
   const [copySuccess, setCopySuccess] = useState('');
+  
+  // Advanced QR Settings
+  const [qrColorType, setQrColorType] = useState('solid'); // 'solid' or 'gradient'
+  const [qrColor1, setQrColor1] = useState('#000000');
+  const [qrColor2, setQrColor2] = useState('#10b981');
+  const [qrDotStyle, setQrDotStyle] = useState('square'); // square, dots, rounded, classy
+  const [qrErrorCorrection, setQrErrorCorrection] = useState('Q'); // L, M, Q, H
+  const [qrFrameText, setQrFrameText] = useState(''); // empty = no frame
+  
+  const qrRef = useRef(null);
+  const frameRef = useRef(null);
+  const [qrCodeInstance, setQrCodeInstance] = useState(null);
+
+  // Initialize qr-code-styling dynamically to avoid SSR issues
+  useEffect(() => {
+    import('qr-code-styling').then(({ default: QRCodeStyling }) => {
+      const instance = new QRCodeStyling({
+        width: 256,
+        height: 256,
+        type: "canvas",
+        imageOptions: { crossOrigin: "anonymous", margin: 10 }
+      });
+      setQrCodeInstance(instance);
+    });
+  }, []);
+
+  // Append QR Canvas to DOM
+  useEffect(() => {
+    if (qrCodeInstance && qrRef.current && isQrGenerated) {
+      qrRef.current.innerHTML = '';
+      qrCodeInstance.append(qrRef.current);
+    }
+  }, [qrCodeInstance, isQrGenerated]);
+
+  // Update QR Code when settings change
+  useEffect(() => {
+    if (qrCodeInstance && qrText && isQrGenerated) {
+      qrCodeInstance.update({
+        data: qrText,
+        dotsOptions: {
+          color: qrColor1,
+          type: qrDotStyle,
+          gradient: qrColorType === 'gradient' ? {
+            type: 'linear',
+            rotation: Math.PI / 4,
+            colorStops: [{ offset: 0, color: qrColor1 }, { offset: 1, color: qrColor2 }]
+          } : undefined
+        },
+        backgroundOptions: { color: "#ffffff" },
+        image: qrLogo,
+        qrOptions: { errorCorrectionLevel: qrErrorCorrection }
+      });
+    }
+  }, [qrText, qrLogo, qrColorType, qrColor1, qrColor2, qrDotStyle, qrErrorCorrection, isQrGenerated, qrCodeInstance]);
 
   // Sinkronisasi tab dengan URL Hash agar bertahan saat di-refresh
   useEffect(() => {
@@ -191,32 +245,32 @@ export default function Home() {
     }
   };
 
-  const downloadQR = () => {
-    const canvas = document.getElementById('qr-canvas');
-    if (!canvas) return;
-    const pngUrl = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
-    const downloadLink = document.createElement('a');
-    downloadLink.href = pngUrl;
-    downloadLink.download = 'QR_Code.png';
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
+  const downloadQR = async () => {
+    if (!frameRef.current) return;
+    try {
+      const dataUrl = await htmlToImage.toPng(frameRef.current, { cacheBust: true, pixelRatio: 2 });
+      const link = document.createElement('a');
+      link.download = 'Custom_QRCode.png';
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error('Download failed:', err);
+      alert('Failed to generate image for download.');
+    }
   };
 
   const copyQR = async () => {
-    const canvas = document.getElementById('qr-canvas');
-    if (!canvas) return;
-    canvas.toBlob(async (blob) => {
-      try {
-        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-        setCopySuccess('QR Code copied to clipboard!');
-        setTimeout(() => setCopySuccess(''), 3000);
-      } catch (err) {
-        console.error('Copy failed:', err);
-        setCopySuccess('Failed: Browser does not support this feature.');
-        setTimeout(() => setCopySuccess(''), 3000);
-      }
-    });
+    if (!frameRef.current) return;
+    try {
+      const blob = await htmlToImage.toBlob(frameRef.current, { cacheBust: true, pixelRatio: 2 });
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      setCopySuccess('QR Code copied to clipboard!');
+      setTimeout(() => setCopySuccess(''), 3000);
+    } catch (err) {
+      console.error('Copy failed:', err);
+      setCopySuccess('Failed: Browser does not support this feature.');
+      setTimeout(() => setCopySuccess(''), 3000);
+    }
   };
 
   const getPageConfig = () => {
@@ -382,6 +436,55 @@ export default function Home() {
                   )}
                 </div>
 
+                <div className="qr-settings-panel">
+                  <div className="setting-group">
+                    <span className="setting-label">Color Style</span>
+                    <select className="format-select" value={qrColorType} onChange={e => setQrColorType(e.target.value)}>
+                      <option value="solid">Solid Color</option>
+                      <option value="gradient">Gradient</option>
+                    </select>
+                    <div className="setting-row">
+                      <input type="color" className="color-picker" value={qrColor1} onChange={e => setQrColor1(e.target.value)} />
+                      {qrColorType === 'gradient' && (
+                        <input type="color" className="color-picker" value={qrColor2} onChange={e => setQrColor2(e.target.value)} />
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="setting-group">
+                    <span className="setting-label">Dot Shape</span>
+                    <select className="format-select" value={qrDotStyle} onChange={e => setQrDotStyle(e.target.value)}>
+                      <option value="square">Square</option>
+                      <option value="dots">Dots</option>
+                      <option value="rounded">Rounded</option>
+                      <option value="classy">Classy</option>
+                      <option value="extra-rounded">Extra Rounded</option>
+                    </select>
+                  </div>
+
+                  <div className="setting-group">
+                    <span className="setting-label">Error Correction</span>
+                    <select className="format-select" value={qrErrorCorrection} onChange={e => setQrErrorCorrection(e.target.value)}>
+                      <option value="L">Low (Best for simple text)</option>
+                      <option value="M">Medium</option>
+                      <option value="Q">Quartile</option>
+                      <option value="H">High (Best for logos)</option>
+                    </select>
+                  </div>
+
+                  <div className="setting-group">
+                    <span className="setting-label">Frame Text (Optional)</span>
+                    <input 
+                      type="text" 
+                      className="url-input" 
+                      placeholder="e.g. SCAN ME" 
+                      value={qrFrameText}
+                      onChange={e => setQrFrameText(e.target.value.toUpperCase())}
+                      style={{ padding: '0.6rem', fontSize: '0.9rem' }}
+                    />
+                  </div>
+                </div>
+
                 <button 
                   className="download-btn" 
                   onClick={() => {
@@ -390,7 +493,7 @@ export default function Home() {
                     setIsQrGenerated(true);
                   }}
                   disabled={!url}
-                  style={{ width: '100%', marginTop: '1rem', padding: '1rem' }}
+                  style={{ width: '100%', marginTop: '0.5rem', padding: '1rem' }}
                 >
                   <QrCode size={20} />
                   Generate QR Code
@@ -398,22 +501,17 @@ export default function Home() {
 
                 {isQrGenerated && qrText && (
                   <div className="qr-preview">
-                    <div className="qr-canvas-wrapper">
-                      <QRCodeCanvas
-                        id="qr-canvas"
-                        value={qrText}
-                        size={256}
-                        level="H"
-                        includeMargin={true}
-                        imageSettings={
-                          qrLogo ? {
-                            src: qrLogo,
-                            height: 64,
-                            width: 64,
-                            excavate: true,
-                          } : undefined
-                        }
-                      />
+                    <div 
+                      className={`qr-frame-wrapper ${qrFrameText ? 'framed' : ''}`} 
+                      ref={frameRef}
+                      style={qrFrameText ? { borderColor: qrColor1 } : {}}
+                    >
+                      {qrFrameText && (
+                        <div className="qr-frame-text" style={{ color: qrColor1 }}>
+                          {qrFrameText}
+                        </div>
+                      )}
+                      <div className="qr-canvas-wrapper" ref={qrRef}></div>
                     </div>
                     
                     <div className="qr-actions">
