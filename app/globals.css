@@ -5,6 +5,8 @@
   --bg-youtube-dark: #c2171e;
   --bg-facebook: #1877f2;
   --bg-facebook-dark: #1059b8;
+  --bg-qrcode: #10b981;
+  --bg-qrcode-dark: #059669;
   
   --glass-bg: rgba(255, 255, 255, 0.9);
   --glass-border: rgba(255, 255, 255, 0.4);
@@ -50,6 +52,10 @@ body {
 
 .app-wrapper.tiktok {
   background: linear-gradient(135deg, #111111 0%, #000000 100%);
+}
+
+.app-wrapper.qrcode {
+  background: radial-gradient(circle at 50% 0%, var(--bg-qrcode), var(--bg-qrcode-dark));
 }
 
 /* Sidebar */
@@ -204,6 +210,7 @@ body {
 .nav-item.active.facebook-btn { color: var(--bg-facebook); }
 .nav-item.active.instagram-btn { color: #d6249f; }
 .nav-item.active.tiktok-btn { color: #00f2fe; }
+.nav-item.active.qrcode-btn { color: var(--bg-qrcode); }
 
 /* Main Content Area */
 .main-content {
@@ -315,6 +322,11 @@ body {
 .app-wrapper.tiktok .input-wrapper:focus-within {
   border-color: #00f2fe;
   box-shadow: 0 0 0 3px rgba(0, 242, 254, 0.15);
+}
+
+.app-wrapper.qrcode .input-wrapper:focus-within {
+  border-color: var(--bg-qrcode);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
 }
 
 .url-input {
@@ -445,6 +457,16 @@ body {
   color: white;
 }
 
+.app-wrapper.qrcode .download-btn {
+  background: var(--bg-qrcode);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.app-wrapper.qrcode .download-btn:hover:not(:disabled) {
+  background: var(--bg-qrcode-dark);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+}
+
 .download-btn:active:not(:disabled) {
   transform: translateY(1px);
 }
@@ -510,6 +532,109 @@ body {
 .app-wrapper.facebook .loading-wrapper { color: var(--bg-facebook); }
 .app-wrapper.instagram .loading-wrapper { color: #d6249f; }
 .app-wrapper.tiktok .loading-wrapper { color: #fe2c55; }
+.app-wrapper.qrcode .loading-wrapper { color: var(--bg-qrcode); }
+
+/* QR Code Specific Styles */
+.file-upload-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.file-upload-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 2px dashed var(--glass-border);
+  border-radius: 12px;
+  cursor: pointer;
+  color: var(--text-main);
+  transition: all 0.2s;
+  background: rgba(255, 255, 255, 0.5);
+  font-weight: 500;
+}
+
+.file-upload-label:hover {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: var(--bg-qrcode);
+}
+
+.qr-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+  background: white;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.05);
+  animation: fadeIn 0.4s ease;
+}
+
+.qr-canvas-wrapper {
+  padding: 1rem;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.qr-actions {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+}
+
+.qr-action-btn {
+  flex: 1;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.qr-copy-btn {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.qr-copy-btn:hover {
+  background: #e2e8f0;
+}
+
+.qr-download-btn {
+  background: var(--bg-qrcode);
+  color: white;
+}
+
+.qr-download-btn:hover {
+  background: var(--bg-qrcode-dark);
+}
+
+.copy-success-msg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: var(--bg-qrcode);
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(16, 185, 129, 0.1);
+  border-radius: 8px;
+  width: 100%;
+  animation: fadeIn 0.3s ease;
+}
 
 .spinner {
   animation: spin 1s linear infinite;
