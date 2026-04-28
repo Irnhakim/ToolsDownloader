@@ -127,11 +127,50 @@ body {
   overflow: hidden;
   opacity: 0;
   transition: max-height 0.3s ease-out, opacity 0.2s ease-out;
+  margin-left: 0.5rem;
+  padding-left: 1rem;
+  position: relative;
 }
 
 .nav-group-content.open {
   max-height: 500px;
   opacity: 1;
+}
+
+/* Tree Lines */
+.nav-group-content .nav-item {
+  position: relative;
+}
+
+/* Horizontal Line */
+.nav-group-content .nav-item::before {
+  content: '';
+  position: absolute;
+  left: -1rem;
+  top: 50%;
+  width: 1rem;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Vertical Line */
+.nav-group-content .nav-item::after {
+  content: '';
+  position: absolute;
+  left: -1rem;
+  top: -0.5rem;
+  height: calc(100% + 0.5rem);
+  width: 1px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.nav-group-content .nav-item:first-child::after {
+  top: -1rem;
+  height: calc(100% + 1rem);
+}
+
+.nav-group-content .nav-item:last-child::after {
+  height: calc(50% + 0.5rem);
 }
 
 .nav-item {
