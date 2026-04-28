@@ -8,6 +8,16 @@
   --bg-qrcode: #10b981;
   --bg-qrcode-dark: #059669;
   
+  /* File Tools Colors */
+  --bg-compress: #7c3aed;
+  --bg-compress-dark: #5b21b6;
+  --bg-resize: #0891b2;
+  --bg-resize-dark: #0e7490;
+  --bg-img2pdf: #dc2626;
+  --bg-img2pdf-dark: #b91c1c;
+  --bg-pdf2img: #d97706;
+  --bg-pdf2img-dark: #b45309;
+  
   --glass-bg: rgba(255, 255, 255, 0.9);
   --glass-border: rgba(255, 255, 255, 0.4);
   --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
@@ -58,6 +68,22 @@ body {
   background: radial-gradient(circle at 50% 0%, var(--bg-qrcode), var(--bg-qrcode-dark));
 }
 
+.app-wrapper.compress {
+  background: radial-gradient(circle at 30% 10%, #9f67ff, var(--bg-compress-dark));
+}
+
+.app-wrapper.resize {
+  background: radial-gradient(circle at 70% 10%, #38bdf8, var(--bg-resize-dark));
+}
+
+.app-wrapper.img2pdf {
+  background: radial-gradient(circle at 50% 0%, #f87171, var(--bg-img2pdf-dark));
+}
+
+.app-wrapper.pdf2img {
+  background: radial-gradient(circle at 50% 0%, #fbbf24, var(--bg-pdf2img-dark));
+}
+
 /* Sidebar */
 .sidebar {
   width: 280px;
@@ -65,13 +91,103 @@ body {
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border-right: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 2rem 1.5rem;
+  padding: 2rem 1.5rem 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
   z-index: 10;
+  overflow-y: auto;
 }
+
+/* Dev Info Card */
+.dev-info {
+  margin-top: auto;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  text-align: center;
+}
+
+.dev-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  border: 3px solid rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: white;
+  letter-spacing: 0.05em;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+
+.dev-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: white;
+}
+
+.dev-role {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.55);
+  margin-bottom: 0.25rem;
+}
+
+.dev-links {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.dev-link {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.8);
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.dev-link:hover {
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+  transform: translateY(-2px);
+}
+
+.dev-support-btn {
+  margin-top: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #1a1a1a;
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.4);
+}
+
+.dev-support-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(217, 119, 6, 0.5);
+}
+
 
 .sidebar-header {
   display: flex;
@@ -211,6 +327,10 @@ body {
 .nav-item.active.instagram-btn { color: #d6249f; }
 .nav-item.active.tiktok-btn { color: #00f2fe; }
 .nav-item.active.qrcode-btn { color: var(--bg-qrcode); }
+.nav-item.active.compress-btn { color: var(--bg-compress); }
+.nav-item.active.resize-btn { color: var(--bg-resize); }
+.nav-item.active.img2pdf-btn { color: var(--bg-img2pdf); }
+.nav-item.active.pdf2img-btn { color: var(--bg-pdf2img); }
 
 /* Main Content Area */
 .main-content {
@@ -467,6 +587,44 @@ body {
   box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
 }
 
+.app-wrapper.compress .download-btn {
+  background: var(--bg-compress);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+.app-wrapper.compress .download-btn:hover:not(:disabled) {
+  background: var(--bg-compress-dark);
+  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4);
+}
+
+.app-wrapper.resize .download-btn {
+  background: var(--bg-resize);
+  box-shadow: 0 4px 12px rgba(8, 145, 178, 0.3);
+}
+.app-wrapper.resize .download-btn:hover:not(:disabled) {
+  background: var(--bg-resize-dark);
+  box-shadow: 0 6px 16px rgba(8, 145, 178, 0.4);
+}
+
+.app-wrapper.img2pdf .download-btn {
+  background: var(--bg-img2pdf);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+.app-wrapper.img2pdf .download-btn:hover:not(:disabled) {
+  background: var(--bg-img2pdf-dark);
+  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.4);
+}
+
+.app-wrapper.pdf2img .download-btn {
+  background: var(--bg-pdf2img);
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+  color: #1a1a1a;
+}
+.app-wrapper.pdf2img .download-btn:hover:not(:disabled) {
+  background: var(--bg-pdf2img-dark);
+  box-shadow: 0 6px 16px rgba(217, 119, 6, 0.4);
+  color: white;
+}
+
 .download-btn:active:not(:disabled) {
   transform: translateY(1px);
 }
@@ -656,6 +814,39 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* === File Tools === */
+.tools-container {
+  width: 100%;
+  animation: fadeIn 0.3s ease;
+}
+
+.tools-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.file-upload-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.6);
+  border: 1.5px solid rgba(255,255,255,0.5);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-main);
+  transition: background 0.2s ease;
+  text-align: center;
+}
+
+.file-upload-label:hover {
+  background: rgba(255,255,255,0.9);
 }
 
 .qr-actions {
