@@ -200,7 +200,6 @@ export default function Home() {
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     window.location.hash = tab; // Simpan ke URL hash
-    setIsSidebarOpen(false); // Auto-close sidebar on mobile when tab clicked
   };
 
   return (
