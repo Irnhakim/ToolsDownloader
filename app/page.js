@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Download, X, ChevronDown, Loader2, Video, Tv, Camera, Wrench } from 'lucide-react';
+import { Download, X, ChevronDown, Loader2, Video, Tv, Camera, Music, Wrench } from 'lucide-react';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('youtube');
@@ -35,6 +35,7 @@ export default function Home() {
       const isYtLink = url.includes('youtube.com/') || url.includes('youtu.be/');
       const isFbLink = url.includes('facebook.com/') || url.includes('fb.watch/');
       const isIgLink = url.includes('instagram.com/');
+      const isTkLink = url.includes('tiktok.com/');
       
       if (activeTab === 'youtube' && !isYtLink) {
         setVideoInfo(null);
@@ -47,6 +48,11 @@ export default function Home() {
       }
       
       if (activeTab === 'instagram' && !isIgLink) {
+        setVideoInfo(null);
+        return; 
+      }
+      
+      if (activeTab === 'tiktok' && !isTkLink) {
         setVideoInfo(null);
         return; 
       }
@@ -165,6 +171,13 @@ export default function Home() {
         icon: <Camera size={32} />
       };
     }
+    if (activeTab === 'tiktok') {
+      return {
+        title: 'TikTok Downloader',
+        placeholder: 'Paste TikTok Video Link here...',
+        icon: <Music size={32} />
+      };
+    }
     return {
       title: 'Facebook Downloader',
       placeholder: 'Paste Facebook Video Link here...',
@@ -204,6 +217,14 @@ export default function Home() {
         >
           <Camera size={20} />
           IG Downloader
+        </button>
+        
+        <button 
+          className={`nav-item tiktok-btn ${activeTab === 'tiktok' ? 'active' : ''}`}
+          onClick={() => setActiveTab('tiktok')}
+        >
+          <Music size={20} />
+          TikTok Downloader
         </button>
       </aside>
 

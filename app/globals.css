@@ -48,6 +48,10 @@ body {
   background: radial-gradient(circle at top right, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
 }
 
+.app-wrapper.tiktok {
+  background: linear-gradient(135deg, #111111 0%, #000000 100%);
+}
+
 /* Sidebar */
 .sidebar {
   width: 280px;
@@ -104,6 +108,7 @@ body {
 .nav-item.active.youtube-btn { color: var(--bg-youtube); }
 .nav-item.active.facebook-btn { color: var(--bg-facebook); }
 .nav-item.active.instagram-btn { color: #d6249f; }
+.nav-item.active.tiktok-btn { color: #00f2fe; }
 
 /* Main Content Area */
 .main-content {
@@ -182,6 +187,11 @@ body {
 .app-wrapper.instagram .input-wrapper:focus-within {
   border-color: #d6249f;
   box-shadow: 0 0 0 3px rgba(214, 36, 159, 0.1);
+}
+
+.app-wrapper.tiktok .input-wrapper:focus-within {
+  border-color: #00f2fe;
+  box-shadow: 0 0 0 3px rgba(0, 242, 254, 0.15);
 }
 
 .url-input {
@@ -300,6 +310,18 @@ body {
   box-shadow: 0 6px 16px rgba(214, 36, 159, 0.4);
 }
 
+.app-wrapper.tiktok .download-btn {
+  background: linear-gradient(45deg, #fe2c55 0%, #25f4ee 100%);
+  box-shadow: 0 4px 12px rgba(37, 244, 238, 0.2);
+  color: #111;
+}
+
+.app-wrapper.tiktok .download-btn:hover:not(:disabled) {
+  background: linear-gradient(45deg, #25f4ee 0%, #fe2c55 100%);
+  box-shadow: 0 6px 16px rgba(254, 44, 85, 0.3);
+  color: white;
+}
+
 .download-btn:active:not(:disabled) {
   transform: translateY(1px);
 }
@@ -364,6 +386,7 @@ body {
 .app-wrapper.youtube .loading-wrapper { color: var(--bg-youtube); }
 .app-wrapper.facebook .loading-wrapper { color: var(--bg-facebook); }
 .app-wrapper.instagram .loading-wrapper { color: #d6249f; }
+.app-wrapper.tiktok .loading-wrapper { color: #fe2c55; }
 
 .spinner {
   animation: spin 1s linear infinite;
