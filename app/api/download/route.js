@@ -46,10 +46,20 @@ export async function GET(request) {
     // 3. Cari file hasil yang telah dibuat oleh yt-dlp
     let actualFilePath = '';
     const files = fs.readdirSync(tmpDir);
-    const found = files.find(f => f.startsWith(baseFilename));
+    const relatedFiles = files.filter(f => f.startsWith(baseFilename));
     
-    if (found) {
-      actualFilePath = path.join(tmpDir, found);
+    if (relatedFiles.length > 0) {
+      if (type === 'video') {
+        // Jika ffmpeg gagal/tidak ada, yt-dlp akan meninggalkan file video dan audio terpisah.
+        // Kita harus memastikan yang terpilih adalah file videonya, bukan audionya (.m4a)
+        const videoFile = relatedFiles.find(f => f.endsWith('.mp4')) 
+                       || relatedFiles.find(f => f.endsWith('.mkv'))
+                       || relatedFiles.find(f => f.endsWith('.webm'))
+                       || relatedFiles.find(f => !f.endsWith('.m4a') && !f.endsWith('.mp3'));
+        actualFilePath = path.join(tmpDir, videoFile || relatedFiles[0]);
+      } else {
+        actualFilePath = path.join(tmpDir, relatedFiles[0]);
+      }
     } else {
       throw new Error('File tidak ditemukan setelah proses download selesai.');
     }
@@ -76,19 +86,23 @@ export async function GET(request) {
         fileStream.on('data', (chunk) => controller.enqueue(chunk));
         fileStream.on('end', () => {
           controller.close();
-          // Hapus file sementara setelah selesai dikirim ke user
-          fs.unlink(actualFilePath, (err) => {
-            if (err) console.error('Gagal menghapus file temp:', err);
+          // Hapus SEMUA file sementara (termasuk pecahan audio/video jika gagal merge)
+          relatedFiles.forEach(f => {
+            fs.unlink(path.join(tmpDir, f), () => {});
           });
         });
         fileStream.on('error', (err) => {
           controller.error(err);
-          fs.unlink(actualFilePath, () => {});
+          relatedFiles.forEach(f => {
+            fs.unlink(path.join(tmpDir, f), () => {});
+          });
         });
       },
       cancel() {
         fileStream.destroy();
-        fs.unlink(actualFilePath, () => {});
+        relatedFiles.forEach(f => {
+          fs.unlink(path.join(tmpDir, f), () => {});
+        });
       }
     });
 

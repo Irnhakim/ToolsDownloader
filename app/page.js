@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Download, X, ChevronDown, Loader2, Video, Tv, Wrench } from 'lucide-react';
+import { Download, X, ChevronDown, Loader2, Video, Tv, Camera, Wrench } from 'lucide-react';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('youtube');
@@ -34,15 +34,21 @@ export default function Home() {
       
       const isYtLink = url.includes('youtube.com/') || url.includes('youtu.be/');
       const isFbLink = url.includes('facebook.com/') || url.includes('fb.watch/');
+      const isIgLink = url.includes('instagram.com/');
       
       if (activeTab === 'youtube' && !isYtLink) {
         setVideoInfo(null);
-        return; // Wait for valid yt link
+        return; 
       }
       
       if (activeTab === 'facebook' && !isFbLink) {
         setVideoInfo(null);
-        return; // Wait for valid fb link
+        return; 
+      }
+      
+      if (activeTab === 'instagram' && !isIgLink) {
+        setVideoInfo(null);
+        return; 
       }
 
       setIsLoading(true);
@@ -152,6 +158,13 @@ export default function Home() {
         icon: <Video size={32} />
       };
     }
+    if (activeTab === 'instagram') {
+      return {
+        title: 'Instagram Downloader',
+        placeholder: 'Paste Instagram Reel/Video Link here...',
+        icon: <Camera size={32} />
+      };
+    }
     return {
       title: 'Facebook Downloader',
       placeholder: 'Paste Facebook Video Link here...',
@@ -183,6 +196,14 @@ export default function Home() {
         >
           <Tv size={20} />
           FB Downloader
+        </button>
+        
+        <button 
+          className={`nav-item instagram-btn ${activeTab === 'instagram' ? 'active' : ''}`}
+          onClick={() => setActiveTab('instagram')}
+        >
+          <Camera size={20} />
+          IG Downloader
         </button>
       </aside>
 

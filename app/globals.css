@@ -44,6 +44,10 @@ body {
   background: radial-gradient(circle at 50% 0%, var(--bg-facebook), var(--bg-facebook-dark));
 }
 
+.app-wrapper.instagram {
+  background: radial-gradient(circle at top right, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
+}
+
 /* Sidebar */
 .sidebar {
   width: 280px;
@@ -99,6 +103,7 @@ body {
 
 .nav-item.active.youtube-btn { color: var(--bg-youtube); }
 .nav-item.active.facebook-btn { color: var(--bg-facebook); }
+.nav-item.active.instagram-btn { color: #d6249f; }
 
 /* Main Content Area */
 .main-content {
@@ -172,6 +177,11 @@ body {
 .app-wrapper.facebook .input-wrapper:focus-within {
   border-color: var(--bg-facebook);
   box-shadow: 0 0 0 3px rgba(24, 119, 242, 0.1);
+}
+
+.app-wrapper.instagram .input-wrapper:focus-within {
+  border-color: #d6249f;
+  box-shadow: 0 0 0 3px rgba(214, 36, 159, 0.1);
 }
 
 .url-input {
@@ -280,6 +290,16 @@ body {
   box-shadow: 0 6px 16px rgba(24, 119, 242, 0.4);
 }
 
+.app-wrapper.instagram .download-btn {
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  box-shadow: 0 4px 12px rgba(214, 36, 159, 0.3);
+}
+
+.app-wrapper.instagram .download-btn:hover:not(:disabled) {
+  background: linear-gradient(45deg, #bc1888 0%, #cc2366 25%, #dc2743 50%, #e6683c 75%, #f09433 100%);
+  box-shadow: 0 6px 16px rgba(214, 36, 159, 0.4);
+}
+
 .download-btn:active:not(:disabled) {
   transform: translateY(1px);
 }
@@ -343,6 +363,7 @@ body {
 
 .app-wrapper.youtube .loading-wrapper { color: var(--bg-youtube); }
 .app-wrapper.facebook .loading-wrapper { color: var(--bg-facebook); }
+.app-wrapper.instagram .loading-wrapper { color: #d6249f; }
 
 .spinner {
   animation: spin 1s linear infinite;

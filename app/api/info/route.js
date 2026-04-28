@@ -12,10 +12,8 @@ export async function POST(request) {
     const output = await youtubedl(url, {
       dumpJson: true,
       noWarnings: true,
-      noCallHome: true,
       noCheckCertificate: true,
       preferFreeFormats: true,
-      youtubeSkipDashManifest: true
     });
 
     const formats = output.formats.map(format => ({
