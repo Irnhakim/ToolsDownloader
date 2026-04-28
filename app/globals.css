@@ -31,7 +31,43 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
 }
+
+/* Webkit (Chrome, Edge, Safari) custom scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Main content area scrollbar slightly darker */
+.main-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.main-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.main-content {
+  scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+}
+
 
 body {
   font-family: 'Inter', sans-serif;
@@ -264,35 +300,32 @@ body {
   position: relative;
 }
 
-/* Horizontal Line */
+/* Vertical line per item — bridges gap above and below */
+.nav-group-content .nav-item::after {
+  content: '';
+  position: absolute;
+  left: -1rem;
+  top: -0.25rem;
+  height: calc(100% + 0.5rem); /* full height + bridge both half-gaps */
+  width: 1px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+}
+
+/* Last item: stop at midpoint (the horizontal connector), don't go further */
+.nav-group-content .nav-item:last-child::after {
+  height: calc(50% + 0.25rem);
+}
+
+/* Horizontal connector per item */
 .nav-group-content .nav-item::before {
   content: '';
   position: absolute;
   left: -1rem;
   top: 50%;
-  width: 1rem;
+  width: 0.75rem;
   height: 1px;
-  background: rgba(255, 255, 255, 0.2);
-}
-
-/* Vertical Line */
-.nav-group-content .nav-item::after {
-  content: '';
-  position: absolute;
-  left: -1rem;
-  top: -0.5rem;
-  height: calc(100% + 0.5rem);
-  width: 1px;
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.nav-group-content .nav-item:first-child::after {
-  top: -1rem;
-  height: calc(100% + 1rem);
-}
-
-.nav-group-content .nav-item:last-child::after {
-  height: calc(50% + 0.5rem);
+  background: rgba(255, 255, 255, 0.25);
 }
 
 .nav-item {
