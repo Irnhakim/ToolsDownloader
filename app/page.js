@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Download, X, ChevronDown, Loader2, Video, Tv, Camera, Music, Wrench } from 'lucide-react';
+import { Download, X, ChevronDown, Loader2, Video, Tv, Camera, Music, Wrench, Menu } from 'lucide-react';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('youtube');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   const [url, setUrl] = useState('');
   const [videoInfo, setVideoInfo] = useState(null);
@@ -187,17 +188,32 @@ export default function Home() {
 
   const pageConfig = getPageConfig();
 
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setIsSidebarOpen(false); // Auto-close sidebar on mobile when tab clicked
+  };
+
   return (
     <div className={`app-wrapper ${activeTab}`}>
+      {/* Mobile Sidebar Overlay */}
+      {isSidebarOpen && (
+        <div className="sidebar-overlay" onClick={() => setIsSidebarOpen(false)}></div>
+      )}
+
       {/* Sidebar */}
-      <aside className="sidebar">
-        <div className="sidebar-title">
-          <Wrench size={24} /> Tools
+      <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
+        <div className="sidebar-header">
+          <div className="sidebar-title">
+            <Wrench size={24} /> Tools
+          </div>
+          <button className="mobile-close-btn" onClick={() => setIsSidebarOpen(false)}>
+            <X size={24} />
+          </button>
         </div>
         
         <button 
           className={`nav-item youtube-btn ${activeTab === 'youtube' ? 'active' : ''}`}
-          onClick={() => setActiveTab('youtube')}
+          onClick={() => handleTabChange('youtube')}
         >
           <Video size={20} />
           YT Downloader
@@ -205,7 +221,7 @@ export default function Home() {
         
         <button 
           className={`nav-item facebook-btn ${activeTab === 'facebook' ? 'active' : ''}`}
-          onClick={() => setActiveTab('facebook')}
+          onClick={() => handleTabChange('facebook')}
         >
           <Tv size={20} />
           FB Downloader
@@ -213,7 +229,7 @@ export default function Home() {
         
         <button 
           className={`nav-item instagram-btn ${activeTab === 'instagram' ? 'active' : ''}`}
-          onClick={() => setActiveTab('instagram')}
+          onClick={() => handleTabChange('instagram')}
         >
           <Camera size={20} />
           IG Downloader
@@ -221,7 +237,7 @@ export default function Home() {
         
         <button 
           className={`nav-item tiktok-btn ${activeTab === 'tiktok' ? 'active' : ''}`}
-          onClick={() => setActiveTab('tiktok')}
+          onClick={() => handleTabChange('tiktok')}
         >
           <Music size={20} />
           TikTok Downloader
@@ -231,9 +247,14 @@ export default function Home() {
       {/* Main Content */}
       <main className="main-content">
         <div className="container">
-          <h1 className="title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
-            {pageConfig.icon} {pageConfig.title}
-          </h1>
+          <div className="header-row">
+            <button className="hamburger-btn" onClick={() => setIsSidebarOpen(true)}>
+              <Menu size={28} />
+            </button>
+            <h1 className="title">
+              {pageConfig.icon} {pageConfig.title}
+            </h1>
+          </div>
           
           <div className="glass-card">
             <div className="input-wrapper">
