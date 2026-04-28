@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Download, X, Search, ChevronDown, Loader2 } from 'lucide-react';
+import { Download, X, ChevronDown, Loader2, Video, Tv, Wrench } from 'lucide-react';
 
 export default function Home() {
+  const [activeTab, setActiveTab] = useState('youtube');
+  
   const [url, setUrl] = useState('');
   const [videoInfo, setVideoInfo] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -11,13 +13,36 @@ export default function Home() {
   const [selectedFormat, setSelectedFormat] = useState('');
   const [isDownloading, setIsDownloading] = useState(false);
 
+  // Reset state when switching tabs
+  useEffect(() => {
+    setUrl('');
+    setVideoInfo(null);
+    setError('');
+    setSelectedFormat('');
+    setIsDownloading(false);
+  }, [activeTab]);
+
   // Debounce fetching info
   useEffect(() => {
     const fetchInfo = async () => {
-      if (!url || (!url.includes('youtube.com/') && !url.includes('youtu.be/'))) {
+      // Basic validation based on active tab
+      if (!url) {
         setVideoInfo(null);
         setError('');
         return;
+      }
+      
+      const isYtLink = url.includes('youtube.com/') || url.includes('youtu.be/');
+      const isFbLink = url.includes('facebook.com/') || url.includes('fb.watch/');
+      
+      if (activeTab === 'youtube' && !isYtLink) {
+        setVideoInfo(null);
+        return; // Wait for valid yt link
+      }
+      
+      if (activeTab === 'facebook' && !isFbLink) {
+        setVideoInfo(null);
+        return; // Wait for valid fb link
       }
 
       setIsLoading(true);
@@ -27,9 +52,7 @@ export default function Home() {
       try {
         const res = await fetch('/api/info', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url }),
         });
 
@@ -58,7 +81,7 @@ export default function Home() {
     }, 800);
 
     return () => clearTimeout(timeoutId);
-  }, [url]);
+  }, [url, activeTab]);
 
   const handleClear = () => {
     setUrl('');
@@ -82,8 +105,12 @@ export default function Home() {
     const ext = format.ext;
     const title = videoInfo.title;
     const downloadId = Date.now().toString();
+    
+    // Tentukan apakah format yang dipilih adalah video atau audio
+    const isVideo = videoInfo.videoFormats?.some(f => f.format_id === selectedFormat);
+    const type = isVideo ? 'video' : 'audio';
 
-    const downloadUrl = `/api/download?url=${encodeURIComponent(url)}&format_id=${selectedFormat}&ext=${ext}&title=${encodeURIComponent(title)}&downloadId=${downloadId}`;
+    const downloadUrl = `/api/download?url=${encodeURIComponent(url)}&format_id=${selectedFormat}&ext=${ext}&title=${encodeURIComponent(title)}&downloadId=${downloadId}&type=${type}`;
     
     const a = document.createElement('a');
     a.href = downloadUrl;
@@ -97,12 +124,11 @@ export default function Home() {
       if (document.cookie.includes(`download_token_${downloadId}=true`)) {
         setIsDownloading(false);
         clearInterval(checkInterval);
-        // Clear the cookie
         document.cookie = `download_token_${downloadId}=; Max-Age=0; Path=/`;
       }
     }, 1000);
     
-    // Safety timeout to stop spinning after 1 hour (just in case)
+    // Safety timeout
     setTimeout(() => {
       setIsDownloading(false);
       clearInterval(checkInterval);
@@ -118,101 +144,157 @@ export default function Home() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  const getPageConfig = () => {
+    if (activeTab === 'youtube') {
+      return {
+        title: 'YouTube Downloader',
+        placeholder: 'Paste YouTube Link here...',
+        icon: <Video size={32} />
+      };
+    }
+    return {
+      title: 'Facebook Downloader',
+      placeholder: 'Paste Facebook Video Link here...',
+      icon: <Tv size={32} />
+    };
+  };
+
+  const pageConfig = getPageConfig();
+
   return (
-    <div className="container">
-      <h1 className="title">YouTube Downloader</h1>
-      
-      <div className="glass-card">
-        <div className="input-wrapper">
-          <input
-            type="text"
-            className="url-input"
-            placeholder="Paste YouTube Link here..."
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-          />
-          {url && (
-            <button className="clear-btn" onClick={handleClear}>
-              <X size={18} /> Clear
-            </button>
-          )}
+    <div className={`app-wrapper ${activeTab}`}>
+      {/* Sidebar */}
+      <aside className="sidebar">
+        <div className="sidebar-title">
+          <Wrench size={24} /> Tools
         </div>
+        
+        <button 
+          className={`nav-item youtube-btn ${activeTab === 'youtube' ? 'active' : ''}`}
+          onClick={() => setActiveTab('youtube')}
+        >
+          <Video size={20} />
+          YT Downloader
+        </button>
+        
+        <button 
+          className={`nav-item facebook-btn ${activeTab === 'facebook' ? 'active' : ''}`}
+          onClick={() => setActiveTab('facebook')}
+        >
+          <Tv size={20} />
+          FB Downloader
+        </button>
+      </aside>
 
-        {error && (
-          <div style={{ color: 'var(--danger)', fontSize: '0.9rem', padding: '0.5rem 1rem', background: '#fee2e2', borderRadius: '8px' }}>
-            {error}
-          </div>
-        )}
-
-        {isLoading && (
-          <div className="loading-wrapper">
-            <Loader2 className="spinner" size={24} />
-            <span>Fetching video formats...</span>
-          </div>
-        )}
-
-        {videoInfo && !isLoading && (
-          <>
-            <div className="action-row">
-              <div className="format-select-wrapper">
-                <select 
-                  className="format-select"
-                  value={selectedFormat}
-                  onChange={(e) => setSelectedFormat(e.target.value)}
-                >
-                  <optgroup label="Video">
-                    {videoInfo.videoFormats.map((format) => (
-                      <option key={format.format_id} value={format.format_id}>
-                        {format.ext.toUpperCase()} {format.resolution !== 'audio only' ? `(${format.resolution})` : ''} - {formatFileSize(format.filesize)}
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="Audio">
-                    {videoInfo.audioFormats.map((format) => (
-                      <option key={format.format_id} value={format.format_id}>
-                        {format.ext.toUpperCase()} Audio - {formatFileSize(format.filesize)}
-                      </option>
-                    ))}
-                  </optgroup>
-                </select>
-                <ChevronDown className="select-icon" size={20} />
-              </div>
-
-              <button 
-                className="download-btn" 
-                onClick={handleDownload}
-                disabled={!selectedFormat || isDownloading}
-              >
-                {isDownloading ? (
-                  <>
-                    <Loader2 className="spinner" size={20} />
-                    PROCESSING...
-                  </>
-                ) : (
-                  <>
-                    <Download size={20} />
-                    DOWNLOAD
-                  </>
-                )}
-              </button>
-            </div>
-
-            <div className="video-info">
-              {videoInfo.thumbnail && (
-                <img src={videoInfo.thumbnail} alt="Thumbnail" className="thumbnail" />
+      {/* Main Content */}
+      <main className="main-content">
+        <div className="container">
+          <h1 className="title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+            {pageConfig.icon} {pageConfig.title}
+          </h1>
+          
+          <div className="glass-card">
+            <div className="input-wrapper">
+              <input
+                type="text"
+                className="url-input"
+                placeholder={pageConfig.placeholder}
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+              />
+              {url && (
+                <button className="clear-btn" onClick={handleClear}>
+                  <X size={18} /> Clear
+                </button>
               )}
-              <div className="info-text">
-                <div className="video-title" title={videoInfo.title}>{videoInfo.title}</div>
-                <div className="video-meta">
-                  {isDownloading 
-                    ? "Memproses video di server... Harap tunggu (jangan tutup halaman)." 
-                    : "Ready to download. Please select your preferred format."}
-                </div>
-              </div>
             </div>
-          </>
-        )}
-      </div>
+
+            {error && (
+              <div style={{ color: 'var(--danger)', fontSize: '0.9rem', padding: '0.5rem 1rem', background: '#fee2e2', borderRadius: '8px' }}>
+                {error}
+              </div>
+            )}
+
+            {isLoading && (
+              <div className="loading-wrapper">
+                <Loader2 className="spinner" size={24} />
+                <span>Fetching video formats...</span>
+              </div>
+            )}
+
+            {videoInfo && !isLoading && (
+              <>
+                <div className="action-row">
+                  <div className="format-select-wrapper">
+                    <select 
+                      className="format-select"
+                      value={selectedFormat}
+                      onChange={(e) => setSelectedFormat(e.target.value)}
+                    >
+                      {videoInfo.videoFormats && videoInfo.videoFormats.length > 0 && (
+                        <optgroup label="Video">
+                          {videoInfo.videoFormats.map((format) => (
+                            <option key={format.format_id} value={format.format_id}>
+                              {format.ext.toUpperCase()} {format.resolution !== 'audio only' ? `(${format.resolution})` : ''} - {formatFileSize(format.filesize)}
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+                      
+                      {videoInfo.audioFormats && videoInfo.audioFormats.length > 0 && (
+                        <optgroup label="Audio">
+                          {videoInfo.audioFormats.map((format) => (
+                            <option key={format.format_id} value={format.format_id}>
+                              {format.ext.toUpperCase()} Audio - {formatFileSize(format.filesize)}
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+                    </select>
+                    <ChevronDown className="select-icon" size={20} />
+                  </div>
+
+                  <button 
+                    className="download-btn" 
+                    onClick={handleDownload}
+                    disabled={!selectedFormat || isDownloading}
+                  >
+                    {isDownloading ? (
+                      <>
+                        <Loader2 className="spinner" size={20} />
+                        PROCESSING...
+                      </>
+                    ) : (
+                      <>
+                        <Download size={20} />
+                        DOWNLOAD
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <div className="video-info">
+                  {videoInfo.thumbnail ? (
+                    <img src={videoInfo.thumbnail} alt="Thumbnail" className="thumbnail" />
+                  ) : (
+                    <div className="thumbnail" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>No Thumb</span>
+                    </div>
+                  )}
+                  <div className="info-text">
+                    <div className="video-title" title={videoInfo.title}>{videoInfo.title}</div>
+                    <div className="video-meta">
+                      {isDownloading 
+                        ? "Memproses video di server... Harap tunggu (jangan tutup halaman)." 
+                        : "Ready to download. Please select your preferred format."}
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

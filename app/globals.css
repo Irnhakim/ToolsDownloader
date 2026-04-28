@@ -1,15 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  --bg-primary: #e61e25;
-  --bg-secondary: #c2171e;
+  --bg-youtube: #e61e25;
+  --bg-youtube-dark: #c2171e;
+  --bg-facebook: #1877f2;
+  --bg-facebook-dark: #1059b8;
+  
   --glass-bg: rgba(255, 255, 255, 0.9);
   --glass-border: rgba(255, 255, 255, 0.4);
   --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
+  
   --text-main: #333333;
   --text-muted: #666666;
-  --accent: #2563eb;
-  --accent-hover: #1d4ed8;
   --danger: #ef4444;
 }
 
@@ -21,19 +23,97 @@
 
 body {
   font-family: 'Inter', sans-serif;
-  background: radial-gradient(circle at 50% 0%, var(--bg-primary), var(--bg-secondary));
-  min-height: 100vh;
+  color: var(--text-main);
+  overflow: hidden; /* Prevent full body scroll */
+}
+
+/* Layout Wrapper */
+.app-wrapper {
   display: flex;
+  width: 100vw;
+  height: 100vh;
+  transition: background 0.5s ease;
+}
+
+/* Dynamic Backgrounds */
+.app-wrapper.youtube {
+  background: radial-gradient(circle at 50% 0%, var(--bg-youtube), var(--bg-youtube-dark));
+}
+
+.app-wrapper.facebook {
+  background: radial-gradient(circle at 50% 0%, var(--bg-facebook), var(--bg-facebook-dark));
+}
+
+/* Sidebar */
+.sidebar {
+  width: 280px;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+}
+
+.sidebar-title {
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: transparent;
+  border: 1px solid transparent;
+  font-size: 1rem;
+  text-align: left;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.nav-item.active {
+  background: white;
+  color: var(--text-main);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.nav-item.active.youtube-btn { color: var(--bg-youtube); }
+.nav-item.active.facebook-btn { color: var(--bg-facebook); }
+
+/* Main Content Area */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  color: var(--text-main);
-  overflow-x: hidden;
+  padding: 2rem;
+  overflow-y: auto;
 }
 
 .container {
   width: 100%;
   max-width: 800px;
-  padding: 2rem;
   display: flex;
   flex-direction: column;
   gap: 2rem;
@@ -57,18 +137,13 @@ body {
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--glass-border);
   border-radius: 20px;
-  padding: 2rem;
+  padding: 2.5rem;
   width: 100%;
   box-shadow: var(--glass-shadow);
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.glass-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.2);
 }
 
 /* Input Section */
@@ -85,8 +160,18 @@ body {
 }
 
 .input-wrapper:focus-within {
-  border-color: var(--bg-primary);
+  border-color: #94a3b8;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+}
+
+.app-wrapper.youtube .input-wrapper:focus-within {
+  border-color: var(--bg-youtube);
   box-shadow: 0 0 0 3px rgba(230, 30, 37, 0.1);
+}
+
+.app-wrapper.facebook .input-wrapper:focus-within {
+  border-color: var(--bg-facebook);
+  box-shadow: 0 0 0 3px rgba(24, 119, 242, 0.1);
 }
 
 .url-input {
@@ -123,7 +208,7 @@ body {
   color: var(--text-main);
 }
 
-/* Action Row (Dropdown + Download Button) */
+/* Action Row */
 .action-row {
   display: flex;
   gap: 1rem;
@@ -151,10 +236,6 @@ body {
   font-family: 'Inter', sans-serif;
 }
 
-.format-select:focus {
-  border-color: var(--bg-primary);
-}
-
 .select-icon {
   position: absolute;
   right: 1rem;
@@ -164,8 +245,8 @@ body {
   pointer-events: none;
 }
 
+/* Download Button styling based on active tab */
 .download-btn {
-  background: var(--bg-primary);
   color: white;
   border: none;
   padding: 0 2rem;
@@ -177,13 +258,26 @@ body {
   align-items: center;
   gap: 0.5rem;
   transition: all 0.2s ease;
+}
+
+.app-wrapper.youtube .download-btn {
+  background: var(--bg-youtube);
   box-shadow: 0 4px 12px rgba(230, 30, 37, 0.3);
 }
 
-.download-btn:hover:not(:disabled) {
-  background: var(--bg-secondary);
-  transform: translateY(-1px);
+.app-wrapper.youtube .download-btn:hover:not(:disabled) {
+  background: var(--bg-youtube-dark);
   box-shadow: 0 6px 16px rgba(230, 30, 37, 0.4);
+}
+
+.app-wrapper.facebook .download-btn {
+  background: var(--bg-facebook);
+  box-shadow: 0 4px 12px rgba(24, 119, 242, 0.3);
+}
+
+.app-wrapper.facebook .download-btn:hover:not(:disabled) {
+  background: var(--bg-facebook-dark);
+  box-shadow: 0 6px 16px rgba(24, 119, 242, 0.4);
 }
 
 .download-btn:active:not(:disabled) {
@@ -191,10 +285,9 @@ body {
 }
 
 .download-btn:disabled {
-  background: #cbd5e1;
+  background: #cbd5e1 !important;
   cursor: not-allowed;
-  box-shadow: none;
-  transform: none;
+  box-shadow: none !important;
 }
 
 /* Video Info Section */
@@ -214,6 +307,7 @@ body {
   border-radius: 8px;
   object-fit: cover;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  background: #f1f5f9;
 }
 
 .info-text {
@@ -243,10 +337,12 @@ body {
   justify-content: center;
   align-items: center;
   padding: 2rem;
-  color: var(--bg-primary);
   gap: 0.75rem;
   font-weight: 500;
 }
+
+.app-wrapper.youtube .loading-wrapper { color: var(--bg-youtube); }
+.app-wrapper.facebook .loading-wrapper { color: var(--bg-facebook); }
 
 .spinner {
   animation: spin 1s linear infinite;
@@ -263,6 +359,33 @@ body {
 }
 
 /* Responsive */
+@media (max-width: 768px) {
+  .app-wrapper {
+    flex-direction: column;
+  }
+  
+  .sidebar {
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    flex-direction: row;
+    align-items: center;
+    padding: 1rem;
+  }
+  
+  .sidebar-title {
+    margin-bottom: 0;
+    margin-right: auto;
+    font-size: 1.25rem;
+  }
+  
+  .nav-item {
+    width: auto;
+    padding: 0.5rem 1rem;
+  }
+}
+
 @media (max-width: 600px) {
   .action-row {
     flex-direction: column;
