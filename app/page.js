@@ -6,6 +6,7 @@ import { Download, X, ChevronDown, Loader2, Video, Tv, Camera, Music, Wrench, Me
 export default function Home() {
   const [activeTab, setActiveTab] = useState('youtube');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSocialGroupOpen, setIsSocialGroupOpen] = useState(true);
   
   const [url, setUrl] = useState('');
   const [videoInfo, setVideoInfo] = useState(null);
@@ -211,37 +212,52 @@ export default function Home() {
           </button>
         </div>
         
-        <button 
-          className={`nav-item youtube-btn ${activeTab === 'youtube' ? 'active' : ''}`}
-          onClick={() => handleTabChange('youtube')}
-        >
-          <Video size={20} />
-          YT Downloader
-        </button>
-        
-        <button 
-          className={`nav-item facebook-btn ${activeTab === 'facebook' ? 'active' : ''}`}
-          onClick={() => handleTabChange('facebook')}
-        >
-          <Tv size={20} />
-          FB Downloader
-        </button>
-        
-        <button 
-          className={`nav-item instagram-btn ${activeTab === 'instagram' ? 'active' : ''}`}
-          onClick={() => handleTabChange('instagram')}
-        >
-          <Camera size={20} />
-          IG Downloader
-        </button>
-        
-        <button 
-          className={`nav-item tiktok-btn ${activeTab === 'tiktok' ? 'active' : ''}`}
-          onClick={() => handleTabChange('tiktok')}
-        >
-          <Music size={20} />
-          TikTok Downloader
-        </button>
+        <div className="nav-group">
+          <div 
+            className="nav-group-title" 
+            onClick={() => setIsSocialGroupOpen(!isSocialGroupOpen)}
+          >
+            <span>Social Downloader</span>
+            <ChevronDown 
+              size={16} 
+              style={{ transform: isSocialGroupOpen ? 'rotate(0deg)' : 'rotate(-90deg)', transition: 'transform 0.2s' }} 
+            />
+          </div>
+          
+          <div className={`nav-group-content ${isSocialGroupOpen ? 'open' : ''}`}>
+            <button 
+              className={`nav-item youtube-btn ${activeTab === 'youtube' ? 'active' : ''}`}
+              onClick={() => handleTabChange('youtube')}
+            >
+              <Video size={20} />
+              YT Downloader
+            </button>
+            
+            <button 
+              className={`nav-item facebook-btn ${activeTab === 'facebook' ? 'active' : ''}`}
+              onClick={() => handleTabChange('facebook')}
+            >
+              <Tv size={20} />
+              FB Downloader
+            </button>
+            
+            <button 
+              className={`nav-item instagram-btn ${activeTab === 'instagram' ? 'active' : ''}`}
+              onClick={() => handleTabChange('instagram')}
+            >
+              <Camera size={20} />
+              IG Downloader
+            </button>
+            
+            <button 
+              className={`nav-item tiktok-btn ${activeTab === 'tiktok' ? 'active' : ''}`}
+              onClick={() => handleTabChange('tiktok')}
+            >
+              <Music size={20} />
+              TikTok Downloader
+            </button>
+          </div>
+        </div>
       </aside>
 
       {/* Main Content */}

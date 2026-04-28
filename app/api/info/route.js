@@ -14,6 +14,7 @@ export async function POST(request) {
       noWarnings: true,
       noCheckCertificate: true,
       preferFreeFormats: true,
+      forceIpv4: true, // Bypass IPv6 routing issues yang sering menyebabkan timeout
     });
 
     const formats = output.formats.map(format => ({

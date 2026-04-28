@@ -27,6 +27,7 @@ export async function GET(request) {
       output: outputPath,
       noCheckCertificates: true,
       noWarnings: true,
+      forceIpv4: true, // Bypass IPv6 routing issues
     };
 
     if (type === 'video') {
