@@ -52,6 +52,11 @@ export default function Home() {
   const [tempLinkCopied, setTempLinkCopied] = useState(false);
   const [isTempUploading, setIsTempUploading] = useState(false);
 
+  // Pinterest States
+  const [pinterestInfo, setPinterestInfo] = useState(null);
+  const [isPinterestLoading, setIsPinterestLoading] = useState(false);
+  const [pinterestSelectedFormat, setPinterestSelectedFormat] = useState('');
+
   // Restore sidebar group state from localStorage after mount (fix SSR hydration)
   useEffect(() => {
     setIsSocialGroupOpen(localStorage.getItem('sidebar_social') === 'true');
@@ -62,7 +67,7 @@ export default function Home() {
   // Sinkronisasi tab dengan URL Hash agar bertahan saat di-refresh
   useEffect(() => {
     const hash = window.location.hash.replace('#', '');
-    if (['youtube', 'facebook', 'instagram', 'tiktok', 'qrcode', 'compress', 'resize', 'img2pdf', 'pdf2img', 'templink'].includes(hash)) {
+    if (['youtube', 'facebook', 'instagram', 'tiktok', 'pinterest', 'qrcode', 'compress', 'resize', 'img2pdf', 'pdf2img', 'templink'].includes(hash)) {
       setActiveTab(hash);
     }
   }, []);
@@ -139,6 +144,8 @@ export default function Home() {
     setTempFile(null);
     setTempLinkResult(null);
     setTempLinkCopied(false);
+    setPinterestInfo(null);
+    setPinterestSelectedFormat('');
   }, [activeTab]);
 
   // Debounce fetching info
@@ -153,6 +160,28 @@ export default function Home() {
 
       // Jangan lakukan request ke backend jika berada di halaman non-downloader
       if (['qrcode', 'compress', 'resize', 'img2pdf', 'pdf2img', 'templink', 'linkpreview'].includes(activeTab)) {
+        return;
+      }
+
+      // Pinterest: route to dedicated API
+      if (activeTab === 'pinterest') {
+        const isPinUrl = url.includes('pinterest.') || url.includes('pin.it/');
+        if (!isPinUrl) { setPinterestInfo(null); return; }
+        setIsPinterestLoading(true);
+        setError('');
+        setPinterestInfo(null);
+        try {
+          const res = await fetch('/api/pinterest', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Failed');
+          setPinterestInfo(data);
+          if (data.formats?.length > 0) setPinterestSelectedFormat(data.formats[0].format_id);
+        } catch (err) { setError(err.message); }
+        finally { setIsPinterestLoading(false); }
         return;
       }
 
@@ -503,6 +532,13 @@ export default function Home() {
         icon: <Music size={32} />
       };
     }
+    if (activeTab === 'pinterest') {
+      return {
+        title: 'Pinterest Downloader',
+        placeholder: 'Paste Pinterest Pin URL (video or photo)...',
+        icon: <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>
+      };
+    }
     if (activeTab === 'qrcode') {
       return { title: 'QR Code Generator', placeholder: 'Enter Text or URL to generate QR...', icon: <QrCode size={32} /> };
     }
@@ -565,6 +601,10 @@ export default function Home() {
             <button className={`nav-item facebook-btn ${activeTab === 'facebook' ? 'active' : ''}`} onClick={() => handleTabChange('facebook')}><Tv size={20} /> FB Downloader</button>
             <button className={`nav-item instagram-btn ${activeTab === 'instagram' ? 'active' : ''}`} onClick={() => handleTabChange('instagram')}><Camera size={20} /> IG Downloader</button>
             <button className={`nav-item tiktok-btn ${activeTab === 'tiktok' ? 'active' : ''}`} onClick={() => handleTabChange('tiktok')}><Music size={20} /> TikTok Downloader</button>
+            <button className={`nav-item pinterest-btn ${activeTab === 'pinterest' ? 'active' : ''}`} onClick={() => handleTabChange('pinterest')}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>
+              Pinterest
+            </button>
           </div>
         </div>
 
@@ -646,7 +686,8 @@ export default function Home() {
                         setQrText(url);
                         setIsQrGenerated(true);
                       } else {
-                        handleFetchInfo();
+                        // Force re-trigger debounce by toggling URL state
+                        setUrl(v => v);
                       }
                     }
                   }}
@@ -681,6 +722,72 @@ export default function Home() {
               <div className="loading-wrapper">
                 <Loader2 className="spinner" size={24} />
                 <span>Fetching data...</span>
+              </div>
+            )}
+
+            {isPinterestLoading && (
+              <div className="loading-wrapper">
+                <Loader2 className="spinner" size={24} />
+                <span>Fetching Pinterest content...</span>
+              </div>
+            )}
+
+            {activeTab === 'pinterest' && pinterestInfo && (
+              <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {/* Preview card */}
+                <div className="video-info" style={{ padding: '1rem', background: '#fef2f2', borderRadius: '12px', border: '1px solid #fecaca' }}>
+                  {pinterestInfo.thumbnail && (
+                    <img src={pinterestInfo.thumbnail} alt="Preview" className="thumbnail" style={{ borderRadius: '8px', objectFit: 'cover' }} />
+                  )}
+                  <div className="info-text">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem' }}>
+                      <span style={{ background: pinterestInfo.type === 'video' ? '#E60023' : '#E60023', color: 'white', fontSize: '0.7rem', fontWeight: 700, padding: '0.2rem 0.6rem', borderRadius: '20px', textTransform: 'uppercase' }}>
+                        {pinterestInfo.type === 'video' ? '🎬 Video' : '📷 Image'}
+                      </span>
+                    </div>
+                    <div className="video-title">{pinterestInfo.title}</div>
+                  </div>
+                </div>
+
+                {/* Image download */}
+                {pinterestInfo.type === 'image' && (
+                  <a
+                    href={`/api/pinterest/download?url=${encodeURIComponent(pinterestInfo.downloadUrl)}&filename=${encodeURIComponent((pinterestInfo.title || 'pinterest_image').slice(0, 60).replace(/[^a-z0-9]/gi, '_') + '.jpg')}`}
+                    download
+                    className="download-btn"
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '1rem', textDecoration: 'none', borderRadius: '12px', fontWeight: 700 }}
+                  >
+                    <Download size={20} /> Download Image
+                  </a>
+                )}
+
+                {/* Video download */}
+                {pinterestInfo.type === 'video' && pinterestInfo.formats && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <button
+                      className="download-btn"
+                      style={{ padding: '1rem', justifyContent: 'center' }}
+                      onClick={async () => {
+                        const fmt = pinterestInfo.formats[0];
+                        const dlUrl = pinterestInfo.directVideoUrl || fmt?.url;
+                        if (dlUrl) {
+                          const filename = `pinterest_video.${fmt?.ext || 'mp4'}`;
+                          const a = document.createElement('a');
+                          a.href = `/api/pinterest/download?url=${encodeURIComponent(dlUrl)}&filename=${encodeURIComponent(filename)}`;
+                          a.download = filename;
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                        } else {
+                          setError('No downloadable URL found for this format.');
+                        }
+                      }}
+                      disabled={isDownloading}
+                    >
+                      {isDownloading ? <><Loader2 className="spinner" size={20} /> Downloading...</> : <><Download size={20} /> Download Video</>}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 

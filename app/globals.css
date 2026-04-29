@@ -20,6 +20,8 @@
   --bg-pdf2img-dark: #b45309;
   --bg-templink: #4f46e5;
   --bg-templink-dark: #3730a3;
+  --bg-pinterest: #E60023;
+  --bg-pinterest-dark: #ad081b;
 
   --glass-bg: rgba(255, 255, 255, 0.9);
   --glass-border: rgba(255, 255, 255, 0.4);
@@ -125,6 +127,10 @@ body {
 
 .app-wrapper.templink {
   background: radial-gradient(ellipse at 30% 0%, #818cf8, var(--bg-templink-dark));
+}
+
+.app-wrapper.pinterest {
+  background: radial-gradient(ellipse at 20% 0%, #ff6b6b, var(--bg-pinterest-dark));
 }
 
 .app-wrapper.linkpreview {
@@ -376,6 +382,7 @@ body {
 .nav-item.active.img2pdf-btn { color: var(--bg-img2pdf); }
 .nav-item.active.pdf2img-btn { color: var(--bg-pdf2img); }
 .nav-item.active.templink-btn { color: var(--bg-templink); }
+.nav-item.active.pinterest-btn { color: var(--bg-pinterest); }
 
 /* Main Content Area */
 .main-content {
@@ -677,6 +684,15 @@ body {
 .app-wrapper.templink .download-btn:hover:not(:disabled) {
   background: var(--bg-templink-dark);
   box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
+}
+
+.app-wrapper.pinterest .download-btn {
+  background: var(--bg-pinterest);
+  box-shadow: 0 4px 12px rgba(230, 0, 35, 0.35);
+}
+.app-wrapper.pinterest .download-btn:hover:not(:disabled) {
+  background: var(--bg-pinterest-dark);
+  box-shadow: 0 6px 16px rgba(230, 0, 35, 0.45);
 }
 
 .download-btn:active:not(:disabled) {
