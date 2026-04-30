@@ -7,7 +7,7 @@ A modern, premium all-in-one web utility built with **Next.js (App Router)**, fe
 ![FFmpeg](https://img.shields.io/badge/FFmpeg-green?style=for-the-badge&logo=ffmpeg&logoColor=white)
 ![Sharp](https://img.shields.io/badge/Sharp-grey?style=for-the-badge&logo=node.js&logoColor=white)
 
----
+--------
 
 ## ✨ Features
 
