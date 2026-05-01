@@ -1,55 +1,89 @@
-# 🛠️ All-in-One Tools — Social Downloader, QR Generator & File Tools
+# 🛠️ All-in-One Tools — Social Downloader, QR Generator, File Tools & More
 
-A modern, premium all-in-one web utility built with **Next.js (App Router)**, featuring a social media downloader, advanced QR code generator, and a set of powerful image & PDF file tools — all wrapped in a dynamic glassmorphism UI.
+A modern, premium all-in-one web utility built with **Next.js (App Router)**, featuring social media downloaders, an advanced QR code generator, file tools, and secure file sharing — wrapped in a stunning glassmorphism UI with dynamic per-tool color themes.
 
 ![Next.js](https://img.shields.io/badge/Next.js-Black?style=for-the-badge&logo=next.js&logoColor=white)
 ![yt-dlp](https://img.shields.io/badge/yt--dlp-red?style=for-the-badge&logo=youtube&logoColor=white)
 ![FFmpeg](https://img.shields.io/badge/FFmpeg-green?style=for-the-badge&logo=ffmpeg&logoColor=white)
 ![Sharp](https://img.shields.io/badge/Sharp-grey?style=for-the-badge&logo=node.js&logoColor=white)
 
---------
+---
 
 ## ✨ Features
 
 ### 📥 Social Media Downloader
-- **4 Major Platforms:** YouTube, Facebook, Instagram, TikTok
-- **Server-Side Remuxing (FFmpeg):** Automatically merges separate video + audio tracks (no more silent 1080p/4K videos)
-- **Smart URL Validation:** Prevents backend calls for invalid URLs per platform
-- **IPv4 Forcing:** Bypasses API timeouts caused by ISP IPv6 routing issues
+
+| Platform | Supported Content |
+|---|---|
+| **YouTube** | Videos (all resolutions), Audio (MP3/M4A) with server-side FFmpeg remuxing |
+| **Facebook** | Public videos |
+| **Instagram** | Reels & public videos |
+| **TikTok** | Videos (no watermark via yt-dlp) |
+| **Pinterest** | Photos (original resolution) & Videos — auto-detects type |
+
+- **Server-Side Remuxing (FFmpeg):** Merges separate video + audio tracks (no silent 1080p/4K)
+- **Smart URL Validation:** No backend calls for invalid URLs
+- **Pinterest:** Pure HTML scraping — no yt-dlp required, faster and more reliable
+
+---
 
 ### 🎨 Advanced QR Code Generator
-- **Solid & Gradient Colors:** Pick single color or blend two colors (linear 45°)
+
+- **Solid & Gradient Colors:** Single color or two-color linear blend
 - **Custom Dot Shapes:** Square, Dots, Rounded, Classy, Extra Rounded
-- **Error Correction Levels:** L / M / Q / H (H recommended when using logos)
-- **Custom Frame with editable text:** "SCAN ME", promo text, etc.
-- **Logo Upload:** Embed any image at the center of the QR
-- **Export:** Download as PNG (2× resolution) or Copy to Clipboard — frame included!
+- **Error Correction Levels:** L / M / Q / H
+- **Custom Frame:** Editable text around the QR (e.g. "SCAN ME")
+- **Logo Upload:** Embed any image at the center
+- **Export:** Download as PNG (2× resolution) or Copy to Clipboard
+
+---
+
+### 🔗 Temp Link Generator
+
+Share files securely with self-destructing links:
+
+| Expiry Mode | Behavior |
+|---|---|
+| **1× Download** | Link deletes itself after a single download |
+| **24 Hours** | Link expires automatically after 24 hours |
+
+- Max file size: **50 MB**
+- Files stored in server temp directory (`os.tmpdir()`) with auto-cleanup
+- Shareable link — works from any device on the same network
+
+> ⚠️ Uses in-memory store. For multi-instance/Vercel deployments, use Redis or a persistent DB.
+
+---
 
 ### 🗂️ File Tools
+
 | Tool | Description |
 |---|---|
-| **Compress Image** | Reduce JPEG/PNG/WebP file size with quality slider (10–100%) |
-| **Resize Image** | Auto mode (keep aspect ratio) or Custom (Width × Height) with Fit or Fill/Crop option |
-| **Image to PDF** | Combine multiple JPEG/PNG images into a single PDF (client-side via `pdf-lib`) |
-| **PDF to Image** | Extract each PDF page as a high-resolution PNG (2× scale, client-side via `pdfjs-dist`) |
+| **Compress Image** | Reduce JPEG/PNG/WebP size with quality slider (10–100%) |
+| **Resize Image** | Auto (keep aspect ratio) or Custom (W × H) with Fit or Fill/Crop |
+| **Image to PDF** | Combine multiple images into a single PDF (client-side, `pdf-lib`) |
+| **PDF to Image** | Extract each PDF page as high-res PNG (2× scale, client-side, `pdfjs-dist`) |
+
+---
 
 ### 🎨 UI / UX
-- **Dynamic themed backgrounds** — every tool has its own unique gradient palette
-- **Glassmorphism sidebar** with collapsible groups, persistent expand/collapse state (localStorage)
-- **Tree-line navigation** — connected, clean sidebar tree view
-- **Modern slim scrollbar** — 4px translucent scrollbar matching each theme
+
+- **Dynamic themed backgrounds** — each tool has its own gradient palette
+- **Glassmorphism sidebar** with collapsible groups, persistent state via `localStorage`
+- **Tree-line navigation** — clean, connected sidebar tree view
+- **Modern slim scrollbar** — 4px translucent, matches each theme
 - **Developer card** at sidebar bottom with social links & Saweria support button
-- **Mobile responsive** with safe-area-inset support for modern browsers
+- **Mobile responsive** with `safe-area-inset` support
+- **URL hash sync** — active tab persists on page refresh (`#youtube`, `#pinterest`, etc.)
+- **Non-blocking font loading** — Google Fonts via `<link>` preload, not `@import`
 
 ---
 
 ## 🛠️ Prerequisites
 
-Ensure your server or machine has the following installed:
-
-1. **Node.js** v18 or newer
+1. **Node.js** v18+
 2. **Python 3** — required by `youtube-dl-exec` / `yt-dlp`
-3. **FFmpeg** — **CRITICAL** for merging high-resolution video + audio tracks
+3. **FFmpeg** — **required** for merging high-res video + audio tracks
 
 ### Install FFmpeg
 
@@ -57,7 +91,7 @@ Ensure your server or machine has the following installed:
 ```bash
 winget install gyan.ffmpeg
 ```
-> Restart your terminal or computer after installation.
+> Restart terminal after installation.
 
 **Linux (Ubuntu / Debian / Armbian / CasaOS):**
 ```bash
@@ -73,11 +107,14 @@ sudo apt update && sudo apt install ffmpeg -y
 git clone https://github.com/Irnhakim/ToolsDownloader.git
 cd ToolsDownloader
 
-# 2. Install all dependencies
+# 2. Install dependencies
 npm install
 
-# 3. Start the development server
+# 3. Start dev server (default port 3000)
 npm run dev
+
+# Custom port
+npm run dev -- -p 3001
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
@@ -89,7 +126,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 For 24/7 self-hosted deployment (CasaOS, Ubuntu Server, Armbian, etc.):
 
 ```bash
-# Install PM2 globally
+# Install PM2
 npm install -g pm2
 
 # Build for production
@@ -103,7 +140,19 @@ pm2 startup
 pm2 save
 ```
 
-> **Optional:** Expose via Nginx Reverse Proxy or Cloudflare Tunnel to access from outside your network.
+### Change Port (Production)
+
+Edit `package.json`:
+```json
+"start": "next start -p 3001"
+```
+
+Or with PM2:
+```bash
+pm2 start npm --name "tools-downloader" -- start -- -p 3001
+```
+
+> **Optional:** Expose via Nginx Reverse Proxy or Cloudflare Tunnel for external access.
 
 ---
 
@@ -112,25 +161,31 @@ pm2 save
 | Package | Purpose |
 |---|---|
 | `next` | App framework (App Router) |
-| `youtube-dl-exec` | yt-dlp wrapper for video info & download |
+| `youtube-dl-exec` | yt-dlp wrapper — YouTube, Facebook, Instagram, TikTok |
 | `sharp` | Server-side image compression & resizing |
-| `pdf-lib` | Client-side Image → PDF conversion |
-| `pdfjs-dist` | Client-side PDF → Image extraction |
-| `qr-code-styling` | Advanced QR code generation with custom styling |
-| `html-to-image` | Capture QR frame (with text) as PNG blob |
+| `pdf-lib` | Client-side Image → PDF |
+| `pdfjs-dist` | Client-side PDF → Image |
+| `qr-code-styling` | Advanced QR code with custom styling |
+| `html-to-image` | Capture QR frame as PNG |
 | `lucide-react` | Icon library |
+
+> **Pinterest** uses native `fetch()` HTML scraping — no extra dependency needed.
 
 ---
 
 ## 📝 Important Notes
 
-- **Private Content:** Only **public** videos/posts can be downloaded. Private accounts will return an error.
-- **Temp Folder:** Processed videos are temporarily saved in `os.tmpdir()` and automatically cleaned up after streaming to prevent storage leaks.
-- **yt-dlp Updates:** Social media platforms frequently change their APIs. If downloads break, update yt-dlp:
+- **Private Content:** Only **public** posts can be downloaded. Private accounts return an error.
+- **Temp Files:** Processed videos saved to `os.tmpdir()`, cleaned up automatically after streaming.
+- **yt-dlp Updates:** Social platforms change APIs frequently. If downloads break:
   ```bash
   npm update youtube-dl-exec
   ```
-- **Image & PDF Processing:** Compress and Resize run on the **server** (Sharp). Image→PDF and PDF→Image run entirely in the **browser** (no server upload needed).
+- **Image & PDF Processing:**
+  - Compress & Resize → **server-side** (Sharp)
+  - Image→PDF & PDF→Image → **client-side** (no upload needed)
+- **Pinterest:** Uses JSON-LD + OG scraping — works without yt-dlp or cookies.
+- **Temp Link Store:** In-memory only. Restarting the server clears all active links.
 
 ---
 

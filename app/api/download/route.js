@@ -48,15 +48,15 @@ export async function GET(request) {
     let actualFilePath = '';
     const files = fs.readdirSync(tmpDir);
     const relatedFiles = files.filter(f => f.startsWith(baseFilename));
-    
+
     if (relatedFiles.length > 0) {
       if (type === 'video') {
         // Jika ffmpeg gagal/tidak ada, yt-dlp akan meninggalkan file video dan audio terpisah.
         // Kita harus memastikan yang terpilih adalah file videonya, bukan audionya (.m4a)
-        const videoFile = relatedFiles.find(f => f.endsWith('.mp4')) 
-                       || relatedFiles.find(f => f.endsWith('.mkv'))
-                       || relatedFiles.find(f => f.endsWith('.webm'))
-                       || relatedFiles.find(f => !f.endsWith('.m4a') && !f.endsWith('.mp3'));
+        const videoFile = relatedFiles.find(f => f.endsWith('.mp4'))
+          || relatedFiles.find(f => f.endsWith('.mkv'))
+          || relatedFiles.find(f => f.endsWith('.webm'))
+          || relatedFiles.find(f => !f.endsWith('.m4a') && !f.endsWith('.mp3'));
         actualFilePath = path.join(tmpDir, videoFile || relatedFiles[0]);
       } else {
         actualFilePath = path.join(tmpDir, relatedFiles[0]);
@@ -89,20 +89,20 @@ export async function GET(request) {
           controller.close();
           // Hapus SEMUA file sementara (termasuk pecahan audio/video jika gagal merge)
           relatedFiles.forEach(f => {
-            fs.unlink(path.join(tmpDir, f), () => {});
+            fs.unlink(path.join(tmpDir, f), () => { });
           });
         });
         fileStream.on('error', (err) => {
           controller.error(err);
           relatedFiles.forEach(f => {
-            fs.unlink(path.join(tmpDir, f), () => {});
+            fs.unlink(path.join(tmpDir, f), () => { });
           });
         });
       },
       cancel() {
         fileStream.destroy();
         relatedFiles.forEach(f => {
-          fs.unlink(path.join(tmpDir, f), () => {});
+          fs.unlink(path.join(tmpDir, f), () => { });
         });
       }
     });
