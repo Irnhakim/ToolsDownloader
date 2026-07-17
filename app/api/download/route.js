@@ -22,6 +22,7 @@ export async function GET(request) {
   const outputPath = path.join(tmpDir, `${baseFilename}.%(ext)s`);
 
   try {
+    const cookiesPath = path.join(process.cwd(), 'cookies.txt');
     // 1. Konfigurasi opsi unduhan
     const ytDlpOptions = {
       output: outputPath,
@@ -29,6 +30,10 @@ export async function GET(request) {
       noWarnings: true,
       forceIpv4: true, // Bypass IPv6 routing issues
     };
+
+    if (fs.existsSync(cookiesPath)) {
+      ytDlpOptions.cookies = cookiesPath;
+    }
 
     if (type === 'video') {
       // Minta yt-dlp untuk mengunduh video spesifik + audio terbaik, lalu gabungkan ke MP4

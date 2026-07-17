@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import youtubedl from 'youtube-dl-exec';
+import fs from 'fs';
+import path from 'path';
 
 export async function POST(request) {
   try {
@@ -9,13 +11,20 @@ export async function POST(request) {
       return NextResponse.json({ error: 'URL is required' }, { status: 400 });
     }
 
-    const output = await youtubedl(url, {
+    const cookiesPath = path.join(process.cwd(), 'cookies.txt');
+    const options = {
       dumpJson: true,
       noWarnings: true,
       noCheckCertificate: true,
       preferFreeFormats: true,
       forceIpv4: true, // Bypass IPv6 routing issues yang sering menyebabkan timeout
-    });
+    };
+
+    if (fs.existsSync(cookiesPath)) {
+      options.cookies = cookiesPath;
+    }
+
+    const output = await youtubedl(url, options);
 
     const formats = output.formats.map(format => ({
       format_id: format.format_id,
@@ -47,6 +56,13 @@ export async function POST(request) {
     });
   } catch (error) {
     console.error('Error fetching info:', error);
-    return NextResponse.json({ error: `Failed to fetch video information: ${error.message || error}` }, { status: 500 });
+    
+    let userMessage = error.message || String(error);
+    if (userMessage.includes('Instagram sent an empty media response') || userMessage.includes('login') || userMessage.includes('cookies')) {
+      userMessage = `Instagram/platform ini memerlukan autentikasi. Silakan buat file 'cookies.txt' di folder root proyek (d:\\Programing\\web\\ToolsDownloader\\cookies.txt) berisi cookies dari browser Anda.`;
+    }
+    
+    return NextResponse.json({ error: `Failed to fetch video information: ${userMessage}` }, { status: 500 });
   }
 }
+

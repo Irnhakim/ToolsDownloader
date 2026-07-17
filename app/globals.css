@@ -22,6 +22,9 @@
   --bg-templink-dark: #3730a3;
   --bg-pinterest: #E60023;
   --bg-pinterest-dark: #ad081b;
+  --bg-livestream: #e11d48;
+  --bg-livestream-dark: #be123c;
+
 
   --glass-bg: rgba(255, 255, 255, 0.9);
   --glass-border: rgba(255, 255, 255, 0.4);
@@ -136,6 +139,11 @@ body {
 .app-wrapper.linkpreview {
   background: radial-gradient(ellipse at 60% 0%, #34d399, #0f766e);
 }
+
+.app-wrapper.livestream {
+  background: radial-gradient(circle at 50% 0%, var(--bg-livestream), var(--bg-livestream-dark));
+}
+
 
 /* Sidebar */
 .sidebar {
@@ -383,6 +391,8 @@ body {
 .nav-item.active.pdf2img-btn { color: var(--bg-pdf2img); }
 .nav-item.active.templink-btn { color: var(--bg-templink); }
 .nav-item.active.pinterest-btn { color: var(--bg-pinterest); }
+.nav-item.active.livestream-btn { color: var(--bg-livestream); }
+
 
 /* Main Content Area */
 .main-content {
@@ -1127,3 +1137,86 @@ body {
     margin-bottom: 0.5rem;
   }
 }
+
+/* Live Stream specific custom styles */
+.app-wrapper.livestream .download-btn {
+  background: var(--bg-livestream);
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.3);
+}
+.app-wrapper.livestream .download-btn:hover:not(:disabled) {
+  background: var(--bg-livestream-dark);
+  box-shadow: 0 6px 16px rgba(225, 29, 72, 0.4);
+}
+
+.channels-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.channel-card-btn {
+  padding: 0.75rem 1rem;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.channel-card-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+  border-color: var(--bg-livestream);
+  color: var(--bg-livestream);
+}
+
+.channel-card-btn.active {
+  background: var(--bg-livestream);
+  border-color: var(--bg-livestream);
+  color: white;
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.25);
+}
+
+.stream-category-tabs {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  width: 100%;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 1rem;
+}
+
+.stream-category-tab {
+  padding: 0.5rem 1rem;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.stream-category-tab:hover {
+  color: var(--text-main);
+}
+
+.stream-category-tab.active {
+  color: var(--bg-livestream);
+  border-bottom-color: var(--bg-livestream);
+}
+

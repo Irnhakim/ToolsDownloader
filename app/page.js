@@ -17,6 +17,13 @@ export default function Home() {
   const [error, setError] = useState('');
   const [selectedFormat, setSelectedFormat] = useState('');
 
+  // Live Stream States
+  const [streamButtons, setStreamButtons] = useState(null);
+  const [activeStreamCategory, setActiveStreamCategory] = useState('');
+  const [currentStreamUrl, setCurrentStreamUrl] = useState('');
+  const [isStreamLoading, setIsStreamLoading] = useState(false);
+
+
   // QR Code States
   const [qrText, setQrText] = useState('');
   const [qrLogo, setQrLogo] = useState(null);
@@ -64,13 +71,21 @@ export default function Home() {
     setIsImageGroupOpen(localStorage.getItem('sidebar_filetools') === 'true');
   }, []);
 
-  // Sinkronisasi tab dengan URL Hash agar bertahan saat di-refresh
+  // Sinkronisasi tab dengan URL Hash atau Pathname agar bertahan saat di-refresh
   useEffect(() => {
     const hash = window.location.hash.replace('#', '');
-    if (['youtube', 'facebook', 'instagram', 'tiktok', 'pinterest', 'qrcode', 'compress', 'resize', 'img2pdf', 'pdf2img', 'templink'].includes(hash)) {
+    if (['youtube', 'facebook', 'instagram', 'tiktok', 'pinterest', 'qrcode', 'compress', 'resize', 'img2pdf', 'pdf2img', 'templink', 'livestream'].includes(hash)) {
       setActiveTab(hash);
+    } else {
+      const pathname = window.location.pathname;
+      const isLivePath = pathname.startsWith('/p/') || pathname.includes('.html') || pathname.startsWith('/watch/');
+      if (isLivePath) {
+        setActiveTab('livestream');
+      }
     }
   }, []);
+
+
 
   // Initialize pdfjs-dist dynamically
   useEffect(() => {
@@ -125,10 +140,158 @@ export default function Home() {
   // Sinkronisasi tab dengan URL Hash agar bertahan saat di-refresh
   useEffect(() => {
     const hash = window.location.hash.replace('#', '');
-    if (['youtube', 'facebook', 'instagram', 'tiktok', 'qrcode', 'compress', 'resize', 'img2pdf', 'pdf2img', 'templink'].includes(hash)) {
+    if (['youtube', 'facebook', 'instagram', 'tiktok', 'qrcode', 'compress', 'resize', 'img2pdf', 'pdf2img', 'templink', 'livestream'].includes(hash)) {
       setActiveTab(hash);
     }
   }, []);
+
+  // Register callback for serverplayer2 script to update channel buttons
+  useEffect(() => {
+    window.refreshButtonsFromServer = () => {
+      if (window.buttonsData) {
+        setStreamButtons(window.buttonsData);
+        const categories = Object.keys(window.buttonsData);
+        if (categories.length > 0) {
+          setActiveStreamCategory(categories[0]);
+        }
+      }
+    };
+    return () => {
+      delete window.refreshButtonsFromServer;
+    };
+  }, []);
+
+  // Intercept fetch requests made by the serverplayer script to load configs locally
+  useEffect(() => {
+    const originalFetch = window.fetch;
+    window.fetch = async function (input, init) {
+      let urlStr = typeof input === 'string' ? input : (input && input.url ? input.url : '');
+      if (urlStr.includes('serverplayer2.pages.dev/serv/')) {
+        try {
+          const parts = urlStr.split('/serv/');
+          if (parts.length > 1) {
+            const postIdWithFormat = parts[1].split('?')[0];
+            const postId = postIdWithFormat.split('.json')[0];
+            const localUrl = `/serv/${postId}.json`;
+            console.log(`[Fetch Hook] Intercepted: ${urlStr} -> ${localUrl}`);
+            const res = await originalFetch(localUrl, init);
+            if (res.ok) {
+              return res;
+            }
+          }
+        } catch (e) {
+          console.error('[Fetch Hook] Error loading local file:', e);
+        }
+      }
+      return originalFetch.apply(this, arguments);
+    };
+    return () => {
+      window.fetch = originalFetch;
+    };
+  }, []);
+
+  // Intercept iframe src changes to redirect to our proxy API
+  useEffect(() => {
+    if (activeTab !== 'livestream') return;
+
+    const iframe = document.getElementById('iframe');
+    if (!iframe) return;
+
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'src') {
+          const currentSrc = iframe.getAttribute('src');
+          if (currentSrc && currentSrc.startsWith('https://serverplayer2.pages.dev/')) {
+            observer.disconnect();
+            const proxiedUrl = `/api/player?url=${encodeURIComponent(currentSrc)}`;
+            console.log(`[Iframe Hook] Intercepted src change: ${currentSrc} -> ${proxiedUrl}`);
+            iframe.setAttribute('src', proxiedUrl);
+            observer.observe(iframe, { attributes: true, attributeFilter: ['src'] });
+          }
+        }
+      });
+    });
+
+    observer.observe(iframe, { attributes: true, attributeFilter: ['src'] });
+
+    const interval = setInterval(() => {
+      const currentSrc = iframe.getAttribute('src');
+      if (currentSrc && currentSrc.startsWith('https://serverplayer2.pages.dev/')) {
+        const proxiedUrl = `/api/player?url=${encodeURIComponent(currentSrc)}`;
+        console.log(`[Iframe Hook Interval] Intercepted: ${currentSrc} -> ${proxiedUrl}`);
+        iframe.setAttribute('src', proxiedUrl);
+      }
+    }, 200);
+
+    return () => {
+      observer.disconnect();
+      clearInterval(interval);
+    };
+  }, [activeTab]);
+
+
+  const getPostIdFromPath = (pathname) => {
+    const patterns = [
+      /\/(\d{4})\/(\d{2})\/([^\.]+)\.html/,
+      /\/([^\/]+)\.html/,
+      /\/p\/([^\/\?]+)/
+    ];
+    for (const pattern of patterns) {
+      const match = pathname.match(pattern);
+      if (match) {
+        return match[3] || match[1];
+      }
+    }
+    return null;
+  };
+
+  // Auto load default stream when livestream tab is active
+  useEffect(() => {
+    if (activeTab === 'livestream') {
+      const detectedId = getPostIdFromPath(window.location.pathname);
+      if (detectedId) {
+        handleLoadStream(detectedId);
+      } else {
+        handleLoadStream('live');
+      }
+    }
+  }, [activeTab]);
+
+  const handleLoadStream = (targetId = url) => {
+    if (!targetId.trim()) return;
+    setIsStreamLoading(true);
+    setStreamButtons(null);
+    setCurrentStreamUrl('');
+
+    // Update browser URL pathname using pushState only if it differs to let script match post ID
+    const currentId = getPostIdFromPath(window.location.pathname);
+    if (currentId !== targetId.trim()) {
+      window.history.pushState(null, '', `/p/${targetId.trim()}`);
+    }
+
+
+    // Check if script is already loaded
+    const scriptSrc = 'https://serverplayer2.pages.dev/script/server.js?v=2';
+    let script = document.querySelector(`script[src="${scriptSrc}"]`);
+
+    if (!script) {
+      script = document.createElement('script');
+      script.src = scriptSrc;
+      script.async = true;
+      document.body.appendChild(script);
+    } else {
+      if (typeof window.refreshConfig === 'function') {
+        window.refreshConfig();
+      } else if (typeof window.loadPostConfig === 'function') {
+        window.loadPostConfig();
+      }
+    }
+
+    setTimeout(() => {
+      setIsStreamLoading(false);
+    }, 1500);
+  };
+
   const [isDownloading, setIsDownloading] = useState(false);
 
   // Reset state when switching tabs
@@ -159,9 +322,10 @@ export default function Home() {
       }
 
       // Jangan lakukan request ke backend jika berada di halaman non-downloader
-      if (['qrcode', 'compress', 'resize', 'img2pdf', 'pdf2img', 'templink', 'linkpreview'].includes(activeTab)) {
+      if (['qrcode', 'compress', 'resize', 'img2pdf', 'pdf2img', 'templink', 'linkpreview', 'livestream'].includes(activeTab)) {
         return;
       }
+
 
       // Pinterest: route to dedicated API
       if (activeTab === 'pinterest') {
@@ -560,6 +724,10 @@ export default function Home() {
     if (activeTab === 'linkpreview') {
       return { title: 'Link Preview Generator', placeholder: 'Paste any URL to generate preview...', icon: <Eye size={32} /> };
     }
+    if (activeTab === 'livestream') {
+      return { title: 'Live Stream Player', placeholder: 'Enter Stream ID (e.g. sports, bola, live)...', icon: <Tv size={32} /> };
+    }
+
     return {
       title: 'Facebook Downloader',
       placeholder: 'Paste Facebook Video Link here...',
@@ -605,7 +773,9 @@ export default function Home() {
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z" /></svg>
               Pinterest
             </button>
+            {/*<button className={`nav-item livestream-btn ${activeTab === 'livestream' ? 'active' : ''}`} onClick={() => handleTabChange('livestream')}><Tv size={20} /> Live Stream</button>*/}
           </div>
+
         </div>
 
         <div className="nav-group">
@@ -660,8 +830,9 @@ export default function Home() {
       </aside>
 
       <main className="main-content">
-        <div className="container">
+        <div className="container" id="container">
           <div className="header-row">
+
             <button className="hamburger-btn" onClick={() => setIsSidebarOpen(true)}>
               <Menu size={28} />
             </button>
@@ -671,8 +842,9 @@ export default function Home() {
           </div>
 
           <div className="glass-card">
-            {!['compress', 'resize', 'img2pdf', 'pdf2img', 'templink'].includes(activeTab) && (
+            {!['compress', 'resize', 'img2pdf', 'pdf2img', 'templink', 'livestream'].includes(activeTab) && (
               <div className="input-wrapper">
+
                 <input
                   type="text"
                   className="url-input"
@@ -685,6 +857,8 @@ export default function Home() {
                         if (!url.trim()) return;
                         setQrText(url);
                         setIsQrGenerated(true);
+                      } else if (activeTab === 'livestream') {
+                        handleLoadStream(url);
                       } else {
                         // Force re-trigger debounce by toggling URL state
                         setUrl(v => v);
@@ -692,6 +866,7 @@ export default function Home() {
                     }
                   }}
                 />
+
                 {url && (
                   <button
                     className="clear-btn"
@@ -958,8 +1133,65 @@ export default function Home() {
                   </div>
                 )}
               </div>
+            ) : activeTab === 'livestream' ? (
+              <div className="livestream-container flex flex-col gap-4">
+                {/* Player Container */}
+
+                <div className="player-container w-full aspect-video rounded-lg overflow-hidden bg-black border border-gray-700 relative" style={{ minHeight: '360px', background: '#000' }}>
+                  <iframe
+                    id="iframe"
+                    className="w-full h-full absolute top-0 left-0"
+                    src="about:blank"
+                    allowFullScreen
+                    style={{ border: 'none', width: '100%', height: '100%' }}
+                  ></iframe>
+                </div>
+
+                {/* Channel Lists */}
+                {streamButtons && Object.keys(streamButtons).length > 0 && (
+                  <div style={{ marginTop: '1.5rem', width: '100%' }}>
+                    {/* Category tabs */}
+                    {Object.keys(streamButtons).length > 1 && (
+                      <div className="stream-category-tabs">
+                        {Object.keys(streamButtons).map((cat) => (
+                          <button
+                            key={cat}
+                            className={`stream-category-tab ${activeStreamCategory === cat ? 'active' : ''}`}
+                            onClick={() => setActiveStreamCategory(cat)}
+                          >
+                            {cat}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Channels grid */}
+                    <div className="channels-grid">
+                      {streamButtons[activeStreamCategory]?.map((btn) => (
+                        <button
+                          key={btn.id || btn.label}
+                          className={`channel-card-btn ${currentStreamUrl === btn.url ? 'active' : ''}`}
+                          data-url={btn.url}
+                          onClick={(e) => {
+                            setCurrentStreamUrl(btn.url);
+                            if (typeof window.changeIframe === 'function') {
+                              window.changeIframe(e.currentTarget);
+                            } else {
+                              const iframe = document.getElementById('iframe');
+                              if (iframe) iframe.src = btn.url;
+                            }
+                          }}
+                        >
+                          {btn.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             ) : ['compress', 'resize', 'img2pdf', 'pdf2img', 'templink'].includes(activeTab) ? (
               <div className="tools-container">
+
 
                 {/* === TEMP LINK GENERATOR === */}
                 {activeTab === 'templink' && (

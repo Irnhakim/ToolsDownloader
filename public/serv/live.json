@@ -1,0 +1,21 @@
+{
+  "title": "Live Stream Player",
+  "defaultPath": "/play?id=rcti",
+  "buttonsData": {
+    "TV Indonesia": [
+      { "label": "RCTI", "path": "/play?id=rcti" },
+      { "label": "SCTV", "path": "/play?id=sctv" },
+      { "label": "Indosiar", "path": "/play?id=indosiar" },
+      { "label": "MNC TV", "path": "/play?id=mnctv" },
+      { "label": "GTV", "path": "/play?id=gtv" },
+      { "label": "Trans TV", "path": "/play?id=transtv" },
+      { "label": "Trans 7", "path": "/play?id=trans7" }
+    ],
+    "Sports Channels": [
+      { "label": "BeIN Sports 1", "path": "/play?id=beinsports1" },
+      { "label": "BeIN Sports 2", "path": "/play?id=beinsports2" },
+      { "label": "Liga 1 Indonesia", "path": "/play?id=liga1" },
+      { "label": "Champions TV", "path": "/play?id=champions" }
+    ]
+  }
+}
